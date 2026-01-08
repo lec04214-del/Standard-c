@@ -1,58 +1,123 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Online Banking Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="index.css">
+<meta charset="UTF-8">
+<title>Mobile Online Banking</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- HEADER -->
-  <header class="header">
-    <div class="menu-icon">
-      <span></span>
-      <span></span>
-      <span></span>
+<!-- LOGIN SCREEN -->
+<div class="login" id="login">
+  <h2>Secure Login</h2>
+  <input type="password" id="pin" placeholder="Enter 4-digit PIN">
+  <button onclick="login()">Login</button>
+  <p id="error"></p>
+</div>
+
+<!-- HEADER -->
+<header class="header hidden" id="header">
+  <div class="menu-icon" id="menuBtn">
+    <span></span><span></span><span></span>
+  </div>
+  <h1>MyBank</h1>
+  <button class="mode" onclick="toggleMode()">🌙</button>
+</header>
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <ul>
+    <li>Dashboard</li>
+    <li>Accounts</li>
+    <li>Transactions</li>
+    <li>Cards</li>
+    <li>Settings</li>
+    <li onclick="logout()">Logout</li>
+  </ul>
+</aside>
+
+<!-- CONTENT -->
+<main class="content hidden" id="content">
+
+  <!-- ACCOUNTS -->
+  <section class="card">
+    <h3>Accounts</h3>
+    <div class="account">
+      <p>Savings Account</p>
+      <strong>$8,200.00</strong>
     </div>
-
-    <h1 class="bank-name">Online Banking</h1>
-
-    <div class="logo">
-      <img src="logo.png" alt="Bank Logo">
+    <div class="account">
+      <p>Current Account</p>
+      <strong>$4,250.00</strong>
     </div>
-  </header>
+  </section>
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <ul>
-      <li>Dashboard</li>
-      <li>Accounts</li>
-      <li>Transfers</li>
-      <li>Payments</li>
-      <li>Cards</li>
-      <li>Settings</li>
-      <li>Logout</li>
-    </ul>
-  </aside>
+  <!-- TRANSACTIONS -->
+  <section class="card">
+    <h3>Transactions</h3>
+    <div class="txn credit">+ $500 Salary</div>
+    <div class="txn debit">- $120 Grocery</div>
+    <div class="txn debit">- $60 Internet</div>
+    <div class="txn credit">+ $300 Transfer</div>
+  </section>
 
-  <!-- MAIN CONTENT -->
-  <main class="content">
-    <div class="card">
-      <h2>Account Balance</h2>
-      <p>$12,450.00</p>
-    </div>
+</main>
 
-    <div class="card">
-      <h2>Recent Transactions</h2>
-      <p>No recent activity</p>
-    </div>
+<script>
+const PIN = "1234";
+const loginBox = document.getElementById("login");
+const header = document.getElementById("header");
+const content = document.getElementById("content");
+const error = document.getElementById("error");
 
-    <div class="card">
-      <h2>Quick Transfer</h2>
-      <p>Send money instantly</p>
-    </div>
-  </main>
+function login(){
+  if(document.getElementById("pin").value === PIN){
+    loginBox.style.display="none";
+    header.classList.remove("hidden");
+    content.classList.remove("hidden");
+  } else {
+    error.textContent="Incorrect PIN";
+  }
+}
+
+function logout(){
+  location.reload();
+}
+
+/* SIDEBAR */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.getElementById("sidebar");
+const overlay = document.getElementById("overlay");
+
+menuBtn.onclick = () => {
+  sidebar.classList.add("open");
+  overlay.classList.add("show");
+  history.pushState({menu:true},"");
+};
+
+overlay.onclick = closeMenu;
+
+function closeMenu(){
+  sidebar.classList.remove("open");
+  overlay.classList.remove("show");
+}
+
+window.onpopstate = closeMenu;
+
+/* DARK MODE */
+function toggleMode(){
+  document.body.classList.toggle("dark");
+  localStorage.setItem("mode", document.body.classList.contains("dark"));
+}
+
+if(localStorage.getItem("mode") === "true"){
+  document.body.classList.add("dark");
+}
+</script>
 
 </body>
 </html>
