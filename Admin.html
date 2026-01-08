@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- ADMIN LOGIN -->
+<div class="screen" id="adminLogin">
+  <h2>Admin Login</h2>
+  <input id="adminPin" type="password" placeholder="Admin PIN">
+  <button onclick="adminLogin()">Login</button>
+  <p id="error"></p>
+</div>
+
+<!-- ADMIN DASHBOARD -->
+<div id="adminPanel" class="hidden">
+  <h2>Admin Dashboard</h2>
+  <div id="users"></div>
+</div>
+
+<script>
+const ADMIN_PIN = "9999";
+let users = JSON.parse(localStorage.getItem("users")) || [];
+
+function adminLogin(){
+  if(adminPin.value !== ADMIN_PIN){
+    error.textContent = "Invalid admin PIN";
+    return;
+  }
+  adminLogin.style.display = "none";
+  adminPanel.classList.remove("hidden");
+  loadUsers();
+}
+
+function loadUsers(){
+  usersDiv.innerHTML = "";
+  users.forEach((u, i) => {
+    usersDiv.innerHTML += `
+      <div class="card">
+        <p><strong>${u.name}</strong> (${u.email})</p>
+        <p>Balance: $${u.balance.toFixed(2)}</p>
+
+        <input id="amount${i}" placeholder="Amount">
+        <button onclick="credit(${i})">Credit</button>
+        <button onclick="debit(${i})">Debit</button>
+
+        <textarea id="reply${i}" placeholder="Reply to customer"></textarea>
+        <button onclick="sendReply(${i})">Send Reply</button>
+      </div>
+    `;
+  });
+}
+
+function credit(i){
+  const amt = +document.getElementById("amount"+i).value;
+  users[i].balance += amt;
+  users[i].transactions.push({ type:"Credit", amount:amt });
+  save();
+}
+
+function debit(i){
+  const amt = +document.getElementById("amount"+i).value;
+  users[i].balance -= amt;
+  users[i].transactions.push({ type:"Debit", amount:amt });
+  save();
+}
+
+function sendReply(i){
+  const reply = document.getElementById("reply"+i).value;
+  const lastMsg = users[i].messages.slice(-1)[0];
+  if(lastMsg) lastMsg.reply = reply;
+  save();
+}
+
+function save(){
+  localStorage.setItem("users", JSON.stringify(users));
+  loadUsers();
+}
+</script>
+
+</body>
+</html>
