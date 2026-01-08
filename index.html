@@ -2,18 +2,37 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>standard c online Banking</title>
+<title>Online Banking</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="index.css">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
-<div class="login" id="login">
+<!-- WELCOME -->
+<div class="screen" id="welcome">
+  <h2>Welcome to Online Banking</h2>
+  <button onclick="showRegister()">Register</button>
+  <button class="outline" onclick="showLogin()">Login</button>
+</div>
+
+<!-- REGISTER -->
+<div class="screen hidden" id="register">
+  <h2>Create Account</h2>
+  <input id="rname" placeholder="Full Name">
+  <input id="rphone" placeholder="Phone Number">
+  <input id="raccount" placeholder="Account Number">
+  <input id="rpin" type="password" placeholder="4-digit PIN">
+  <button onclick="register()">Register</button>
+  <p class="link" onclick="goBack()">← Back</p>
+</div>
+
+<!-- LOGIN -->
+<div class="screen hidden" id="login">
   <h2>Secure Login</h2>
-  <input type="password" id="pin" placeholder="Enter 4-digit PIN">
+  <input id="lpin" type="password" placeholder="Enter PIN">
   <button onclick="login()">Login</button>
   <p id="error"></p>
+  <p class="link" onclick="goBack()">← Back</p>
 </div>
 
 <!-- HEADER -->
@@ -21,7 +40,16 @@
   <div class="menu-icon" id="menuBtn">
     <span></span><span></span><span></span>
   </div>
+
   <h1>MyBank</h1>
+
+  <!-- CURRENCY -->
+  <select id="currency" onchange="changeCurrency()">
+    <option value="USD">$ USD</option>
+    <option value="EUR">€ EUR</option>
+    <option value="GBP">£ GBP</option>
+  </select>
+
   <button class="mode" onclick="toggleMode()">🌙</button>
 </header>
 
@@ -34,89 +62,107 @@
     <li>Dashboard</li>
     <li>Accounts</li>
     <li>Transactions</li>
-    <li>Cards</li>
-    <li>Settings</li>
     <li onclick="logout()">Logout</li>
   </ul>
 </aside>
 
-<!-- CONTENT -->
+<!-- DASHBOARD -->
 <main class="content hidden" id="content">
 
-  <!-- ACCOUNTS -->
-  <section class="card">
-    <h3>Accounts</h3>
-    <div class="account">
-      <p>Savings Account</p>
-      <strong>$8,200.00</strong>
-    </div>
-    <div class="account">
-      <p>Current Account</p>
-      <strong>$4,250.00</strong>
-    </div>
-  </section>
+  <!-- BALANCE -->
+  <div class="card">
+    <h3>Account Balance</h3>
+    <strong id="balance"></strong>
+  </div>
 
-  <!-- TRANSACTIONS -->
-  <section class="card">
-    <h3>Transactions</h3>
-    <div class="txn credit">+ $500 Salary</div>
-    <div class="txn debit">- $120 Grocery</div>
-    <div class="txn debit">- $60 Internet</div>
-    <div class="txn credit">+ $300 Transfer</div>
-  </section>
+  <!-- CUSTOMER SERVICE -->
+  <div class="card">
+    <h3>Customer Service</h3>
+    <textarea id="message" placeholder="Write your message..."></textarea>
+    <button onclick="sendMessage()">Send Message</button>
+    <p id="msgStatus"></p>
+  </div>
 
 </main>
 
 <script>
-const PIN = "1234";
-const loginBox = document.getElementById("login");
-const header = document.getElementById("header");
-const content = document.getElementById("content");
-const error = document.getElementById("error");
+/* SCREENS */
+const welcome = document.getElementById("welcome");
+const registerScr = document.getElementById("register");
+const loginScr = document.getElementById("login");
 
+let baseBalance = 12450;
+const rates = { USD:1, EUR:0.92, GBP:0.78 };
+
+function showRegister(){ welcome.classList.add("hidden"); registerScr.classList.remove("hidden"); }
+function showLogin(){ welcome.classList.add("hidden"); loginScr.classList.remove("hidden"); }
+function goBack(){ registerScr.classList.add("hidden"); loginScr.classList.add("hidden"); welcome.classList.remove("hidden"); }
+
+/* REGISTER */
+function register(){
+  if(rpin.value.length !== 4) return alert("PIN must be 4 digits");
+  const user = { name:rname.value, pin:rpin.value };
+  localStorage.setItem("bankUser", JSON.stringify(user));
+  alert("Registration successful. Please login.");
+  showLogin();
+}
+
+/* LOGIN */
 function login(){
-  if(document.getElementById("pin").value === PIN){
-    loginBox.style.display="none";
+  const user = JSON.parse(localStorage.getItem("bankUser"));
+  if(!user) return error.textContent="No account found";
+  if(lpin.value === user.pin){
+    loginScr.classList.add("hidden");
     header.classList.remove("hidden");
     content.classList.remove("hidden");
-  } else {
-    error.textContent="Incorrect PIN";
-  }
+    updateBalance();
+  } else error.textContent="Incorrect PIN";
 }
 
-function logout(){
-  location.reload();
-}
+/* LOGOUT */
+function logout(){ location.reload(); }
 
 /* SIDEBAR */
-const menuBtn = document.getElementById("menuBtn");
-const sidebar = document.getElementById("sidebar");
-const overlay = document.getElementById("overlay");
-
 menuBtn.onclick = () => {
   sidebar.classList.add("open");
   overlay.classList.add("show");
   history.pushState({menu:true},"");
 };
-
 overlay.onclick = closeMenu;
-
 function closeMenu(){
   sidebar.classList.remove("open");
   overlay.classList.remove("show");
 }
-
 window.onpopstate = closeMenu;
+
+/* CURRENCY */
+function changeCurrency(){
+  localStorage.setItem("currency", currency.value);
+  updateBalance();
+}
+function updateBalance(){
+  const curr = localStorage.getItem("currency") || "USD";
+  currency.value = curr;
+  const value = (baseBalance * rates[curr]).toFixed(2);
+  const symbol = curr==="USD"?"$":curr==="EUR"?"€":"£";
+  balance.textContent = symbol + value;
+}
+updateBalance();
+
+/* CUSTOMER SERVICE */
+function sendMessage(){
+  if(!message.value) return;
+  localStorage.setItem("supportMessage", message.value);
+  msgStatus.textContent = "Message sent to customer service ✔";
+  message.value = "";
+}
 
 /* DARK MODE */
 function toggleMode(){
   document.body.classList.toggle("dark");
   localStorage.setItem("mode", document.body.classList.contains("dark"));
 }
-
-if(localStorage.getItem("mode") === "true"){
-  document.body.classList.add("dark");
-}
+if(localStorage.getItem("mode")==="true") document.body.classList.add("dark");
 </script>
 
 </body>
