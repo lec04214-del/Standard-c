@@ -4,165 +4,93 @@
 <meta charset="UTF-8">
 <title>Online Banking</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="index.css">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<!-- WELCOME -->
-<div class="screen" id="welcome">
-  <h2>Welcome to Online Banking</h2>
-  <button onclick="showRegister()">Register</button>
-  <button class="outline" onclick="showLogin()">Login</button>
-</div>
-
-<!-- REGISTER -->
-<div class="screen hidden" id="register">
-  <h2>Create Account</h2>
-  <input id="rname" placeholder="Full Name">
-  <input id="rphone" placeholder="Phone Number">
-  <input id="raccount" placeholder="Account Number">
-  <input id="rpin" type="password" placeholder="4-digit PIN">
-  <button onclick="register()">Register</button>
-  <p class="link" onclick="goBack()">← Back</p>
-</div>
-
 <!-- LOGIN -->
-<div class="screen hidden" id="login">
-  <h2>Secure Login</h2>
-  <input id="lpin" type="password" placeholder="Enter PIN">
+<div class="screen" id="loginScreen">
+  <h2>User Login</h2>
+  <input id="email" placeholder="Email">
+  <input id="pin" type="password" placeholder="4-digit PIN">
   <button onclick="login()">Login</button>
   <p id="error"></p>
-  <p class="link" onclick="goBack()">← Back</p>
 </div>
 
-<!-- HEADER -->
-<header class="header hidden" id="header">
-  <div class="menu-icon" id="menuBtn">
-    <span></span><span></span><span></span>
-  </div>
+<!-- DASHBOARD -->
+<div id="dashboard" class="hidden">
 
-  <h1>MyBank</h1>
-
-  <!-- CURRENCY -->
-  <select id="currency" onchange="changeCurrency()">
-    <option value="USD">$ USD</option>
-    <option value="EUR">€ EUR</option>
-    <option value="GBP">£ GBP</option>
-  </select>
-
-  <button class="mode" onclick="toggleMode()">🌙</button>
+<header class="header">
+  <h2>MyBank</h2>
+  <button onclick="logout()">Logout</button>
 </header>
 
-<!-- OVERLAY -->
-<div class="overlay" id="overlay"></div>
+<main class="content">
 
-<!-- SIDEBAR -->
-<aside class="sidebar" id="sidebar">
-  <ul>
-    <li>Dashboard</li>
-    <li>Accounts</li>
-    <li>Transactions</li>
-    <li onclick="logout()">Logout</li>
-  </ul>
-</aside>
-
-<!-- DASHBOARD -->
-<main class="content hidden" id="content">
-
-  <!-- BALANCE -->
   <div class="card">
     <h3>Account Balance</h3>
-    <strong id="balance"></strong>
+    <strong id="balance">$0.00</strong>
   </div>
 
-  <!-- CUSTOMER SERVICE -->
+  <div class="card">
+    <h3>Transactions</h3>
+    <ul id="transactions"></ul>
+  </div>
+
   <div class="card">
     <h3>Customer Service</h3>
     <textarea id="message" placeholder="Write your message..."></textarea>
-    <button onclick="sendMessage()">Send Message</button>
-    <p id="msgStatus"></p>
+    <button onclick="sendMessage()">Send</button>
+    <p id="adminReply"></p>
   </div>
 
 </main>
+</div>
 
 <script>
-/* SCREENS */
-const welcome = document.getElementById("welcome");
-const registerScr = document.getElementById("register");
-const loginScr = document.getElementById("login");
+let users = JSON.parse(localStorage.getItem("users")) || [];
+let currentUser = null;
 
-let baseBalance = 12450;
-const rates = { USD:1, EUR:0.92, GBP:0.78 };
-
-function showRegister(){ welcome.classList.add("hidden"); registerScr.classList.remove("hidden"); }
-function showLogin(){ welcome.classList.add("hidden"); loginScr.classList.remove("hidden"); }
-function goBack(){ registerScr.classList.add("hidden"); loginScr.classList.add("hidden"); welcome.classList.remove("hidden"); }
-
-/* REGISTER */
-function register(){
-  if(rpin.value.length !== 4) return alert("PIN must be 4 digits");
-  const user = { name:rname.value, pin:rpin.value };
-  localStorage.setItem("bankUser", JSON.stringify(user));
-  alert("Registration successful. Please login.");
-  showLogin();
-}
-
-/* LOGIN */
 function login(){
-  const user = JSON.parse(localStorage.getItem("bankUser"));
-  if(!user) return error.textContent="No account found";
-  if(lpin.value === user.pin){
-    loginScr.classList.add("hidden");
-    header.classList.remove("hidden");
-    content.classList.remove("hidden");
-    updateBalance();
-  } else error.textContent="Incorrect PIN";
+  currentUser = users.find(
+    u => u.email === email.value && u.pin === pin.value
+  );
+  if(!currentUser){
+    error.textContent = "Invalid login details";
+    return;
+  }
+  loginScreen.style.display = "none";
+  dashboard.classList.remove("hidden");
+  render();
 }
 
-/* LOGOUT */
-function logout(){ location.reload(); }
+function render(){
+  balance.textContent = "$" + currentUser.balance.toFixed(2);
 
-/* SIDEBAR */
-menuBtn.onclick = () => {
-  sidebar.classList.add("open");
-  overlay.classList.add("show");
-  history.pushState({menu:true},"");
-};
-overlay.onclick = closeMenu;
-function closeMenu(){
-  sidebar.classList.remove("open");
-  overlay.classList.remove("show");
-}
-window.onpopstate = closeMenu;
+  transactions.innerHTML = "";
+  currentUser.transactions.forEach(t => {
+    transactions.innerHTML += `<li>${t.type}: $${t.amount}</li>`;
+  });
 
-/* CURRENCY */
-function changeCurrency(){
-  localStorage.setItem("currency", currency.value);
-  updateBalance();
+  const lastMessage = currentUser.messages.slice(-1)[0];
+  adminReply.textContent = lastMessage?.reply || "";
 }
-function updateBalance(){
-  const curr = localStorage.getItem("currency") || "USD";
-  currency.value = curr;
-  const value = (baseBalance * rates[curr]).toFixed(2);
-  const symbol = curr==="USD"?"$":curr==="EUR"?"€":"£";
-  balance.textContent = symbol + value;
-}
-updateBalance();
 
-/* CUSTOMER SERVICE */
 function sendMessage(){
   if(!message.value) return;
-  localStorage.setItem("supportMessage", message.value);
-  msgStatus.textContent = "Message sent to customer service ✔";
+  currentUser.messages.push({ text: message.value, reply: "" });
+  save();
   message.value = "";
+  alert("Message sent to support");
 }
 
-/* DARK MODE */
-function toggleMode(){
-  document.body.classList.toggle("dark");
-  localStorage.setItem("mode", document.body.classList.contains("dark"));
+function save(){
+  localStorage.setItem("users", JSON.stringify(users));
 }
-if(localStorage.getItem("mode")==="true") document.body.classList.add("dark");
+
+function logout(){
+  location.reload();
+}
 </script>
 
 </body>
