@@ -4,7 +4,15 @@
 <meta charset="UTF-8">
 <title>Standard-C Online Banking</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="index.css">
+
+<!-- EMAILJS -->
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<script>
+(function(){
+  emailjs.init("YOUR_PUBLIC_KEY");
+})();
+</script>
 </head>
 <body>
 
@@ -31,7 +39,7 @@
 
   <input id="rNationality" placeholder="Nationality">
   <input id="rAddress" placeholder="Residential Address">
-  <input id="rId" placeholder="National ID / Passport Number">
+  <input id="rId" placeholder="National ID / Passport">
   <input id="rEmail" placeholder="Email Address">
 
   <select id="rAccountType">
@@ -42,10 +50,10 @@
 
   <input id="rPin" type="password" placeholder="4-digit PIN">
 
-  <label>Upload ID Document</label>
+  <label>ID Document</label>
   <input id="rDoc" type="file" accept="image/*,.pdf">
 
-  <label>Upload Selfie</label>
+  <label>Selfie</label>
   <input id="rSelfie" type="file" accept="image/*">
 
   <button onclick="sendOTP()">Send Email OTP</button>
@@ -90,6 +98,7 @@
   <div class="card">
     <h4>Account Number</h4>
     <strong id="accNumber"></strong>
+    <p id="freezeStatus"></p>
   </div>
 
   <div class="card">
@@ -97,11 +106,22 @@
     <strong id="balance">$0.00</strong>
   </div>
 
+  <!-- TRANSFER -->
+  <div class="card">
+    <h4>Transfer Funds</h4>
+    <input id="toAcc" placeholder="Recipient Account Number">
+    <input id="amount" type="number" placeholder="Amount">
+    <button onclick="transfer()">Send</button>
+    <p id="transferMsg"></p>
+  </div>
+
+  <!-- TRANSACTIONS -->
   <div class="card">
     <h4>Transactions</h4>
     <ul id="transactions"></ul>
   </div>
 
+  <!-- CUSTOMER SERVICE -->
   <div class="card">
     <h4>Customer Support</h4>
     <textarea id="message" placeholder="Write message"></textarea>
@@ -117,61 +137,52 @@ let currentUser = null;
 let generatedOTP = "";
 let sidebarOpen = false;
 
-/* Navigation */
+/* NAV */
 function showLogin(){ home.classList.add("hidden"); login.classList.remove("hidden"); }
 function showRegister(){ home.classList.add("hidden"); register.classList.remove("hidden"); }
-function goHome(){
-  login.classList.add("hidden");
-  register.classList.add("hidden");
-  home.classList.remove("hidden");
+function goHome(){ login.classList.add("hidden"); register.classList.add("hidden"); home.classList.remove("hidden"); }
+
+/* EMAIL */
+function sendEmail(to,subject,message){
+  emailjs.send("YOUR_SERVICE_ID","YOUR_TEMPLATE_ID",{
+    to_email:to,
+    subject:subject,
+    message:message
+  });
 }
 
-/* Account Number */
+/* ACCOUNT NUMBER */
 function generateAccountNumber(){
-  const year = new Date().getFullYear();
-  const rand = Math.floor(10000000 + Math.random()*90000000);
-  return `SCB-${year}-${rand}`;
+  const y=new Date().getFullYear();
+  return `SCB-${y}-${Math.floor(10000000+Math.random()*90000000)}`;
 }
 
 /* OTP */
 function sendOTP(){
-  if(
-    !rName.value || !rDob.value || !rGender.value ||
-    !rNationality.value || !rAddress.value || !rId.value ||
-    !rEmail.value || !rAccountType.value || !rPin.value ||
-    !rDoc.files[0] || !rSelfie.files[0]
-  ){
-    regError.textContent = "All fields required";
-    return;
+  if(!rName.value||!rEmail.value||!rPin.value||!rDoc.files[0]||!rSelfie.files[0]){
+    regError.textContent="All fields required";return;
   }
-  generatedOTP = Math.floor(100000 + Math.random()*900000).toString();
-  alert("Demo OTP: " + generatedOTP);
+  generatedOTP=Math.floor(100000+Math.random()*900000).toString();
+  sendEmail(rEmail.value,"OTP Verification","Your OTP: "+generatedOTP);
   otpBox.classList.remove("hidden");
 }
 
-function fileToBase64(file, cb){
-  const r = new FileReader();
-  r.onload = () => cb(r.result);
-  r.readAsDataURL(file);
-}
+function file64(f,cb){const r=new FileReader();r.onload=()=>cb(r.result);r.readAsDataURL(f);}
 
 function verifyOTP(){
-  if(otpInput.value !== generatedOTP){
-    regError.textContent = "Invalid OTP";
-    return;
-  }
-
-  fileToBase64(rDoc.files[0], doc64=>{
-    fileToBase64(rSelfie.files[0], selfie64=>{
+  if(otpInput.value!==generatedOTP){regError.textContent="Invalid OTP";return;}
+  file64(rDoc.files[0],d=>{
+    file64(rSelfie.files[0],s=>{
       users.push({
-        accountNumber: generateAccountNumber(),
+        accountNumber:generateAccountNumber(),
         name:rName.value,
         email:rEmail.value,
         pin:rPin.value,
         balance:0,
+        frozen:false,
         transactions:[],
         messages:[],
-        kyc:{document:doc64,selfie:selfie64,status:"Pending"}
+        kyc:{document:d,selfie:s,status:"Pending"}
       });
       localStorage.setItem("users",JSON.stringify(users));
       alert("Account created. KYC pending.");
@@ -180,27 +191,49 @@ function verifyOTP(){
   });
 }
 
-/* Login */
+/* LOGIN */
 function loginUser(){
-  currentUser = users.find(u=>u.email===email.value && u.pin===pin.value);
-  if(!currentUser){ error.textContent="Invalid login"; return; }
+  currentUser=users.find(u=>u.email===email.value&&u.pin===pin.value);
+  if(!currentUser){error.textContent="Invalid login";return;}
   login.classList.add("hidden");
   dashboard.classList.remove("hidden");
+  sendEmail(currentUser.email,"Login Alert","Your account was accessed.");
   render();
 }
 
-/* Dashboard */
+/* DASHBOARD */
 function render(){
-  accNumber.textContent = currentUser.accountNumber;
-  balance.textContent = "$"+currentUser.balance.toFixed(2);
+  accNumber.textContent=currentUser.accountNumber;
+  balance.textContent="$"+currentUser.balance.toFixed(2);
+  freezeStatus.textContent=currentUser.frozen?"ACCOUNT FROZEN":"ACTIVE";
+  freezeStatus.style.color=currentUser.frozen?"red":"green";
+
   transactions.innerHTML="";
   currentUser.transactions.forEach(t=>{
     transactions.innerHTML+=`<li>${t.type}: $${t.amount}</li>`;
   });
+
   const m=currentUser.messages.slice(-1)[0];
   adminReply.textContent=m?.reply||"";
 }
 
+/* TRANSFER */
+function transfer(){
+  if(currentUser.frozen){transferMsg.textContent="Account frozen";return;}
+  const r=users.find(u=>u.accountNumber===toAcc.value);
+  const a=Number(amount.value);
+  if(!r||a<=0||currentUser.balance<a){transferMsg.textContent="Transfer failed";return;}
+  currentUser.balance-=a;
+  r.balance+=a;
+  currentUser.transactions.push({type:"Transfer Out",amount:a});
+  r.transactions.push({type:"Transfer In",amount:a});
+  localStorage.setItem("users",JSON.stringify(users));
+  sendEmail(currentUser.email,"Transfer Sent","You sent $"+a);
+  sendEmail(r.email,"Transfer Received","You received $"+a);
+  render();
+}
+
+/* SUPPORT */
 function sendMessage(){
   currentUser.messages.push({text:message.value,reply:""});
   localStorage.setItem("users",JSON.stringify(users));
@@ -208,20 +241,13 @@ function sendMessage(){
   alert("Message sent");
 }
 
-/* Sidebar */
-function openSidebar(){
-  sidebar.classList.add("open");
-  sidebarOpen=true;
-  history.pushState({},"");
-}
-function closeSidebar(){
-  sidebar.classList.remove("open");
-  sidebarOpen=false;
-}
-window.onpopstate=()=>{ if(sidebarOpen) closeSidebar(); }
+/* SIDEBAR */
+function openSidebar(){sidebar.classList.add("open");sidebarOpen=true;history.pushState({}, "");}
+function closeSidebar(){sidebar.classList.remove("open");sidebarOpen=false;}
+window.onpopstate=()=>{if(sidebarOpen)closeSidebar();}
 
-/* Logout */
-function logout(){ location.reload(); }
+/* LOGOUT */
+function logout(){location.reload();}
 </script>
 
 </body>
