@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <title>Standard-C Admin Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="admin.css">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<!-- ADMIN LOGIN -->
+<!-- ADMIN LOGIN SCREEN -->
 <div class="screen" id="adminLogin">
   <h1>Admin Login</h1>
-  <input id="adminPin" type="password" placeholder="Admin PIN">
+  <input id="adminPin" type="password" placeholder="Enter Admin PIN">
   <button onclick="login()">Login</button>
   <p id="err" class="error"></p>
 </div>
@@ -23,11 +23,11 @@
 </div>
 
 <script>
-//------------------- DATA -----------------------
+// ================== DATA ==================
 let users = JSON.parse(localStorage.getItem("users")) || [];
 const ADMIN_PIN = "9999";
 
-//------------------- LOGIN ---------------------
+// ================== LOGIN =================
 function login(){
   const pin = document.getElementById("adminPin").value;
   const err = document.getElementById("err");
@@ -40,40 +40,52 @@ function login(){
   loadUsers();
 }
 
-//------------------- LOAD USERS ----------------
+// ================== LOAD USERS =================
 function loadUsers(){
   const container = document.getElementById("usersContainer");
   container.innerHTML = "";
+
+  if(users.length === 0){
+    container.innerHTML = "<p>No registered users yet.</p>";
+    return;
+  }
 
   users.forEach((u,i)=>{
     const card = document.createElement("div");
     card.className = "card";
 
-    const transactions = u.transactions.map(t => `<li>${t.type} | $${t.amount} | ${t.date}</li>`).join("");
+    // Transaction history list
+    const transactions = u.transactions.map(t=>`<li>${t.type} | $${t.amount} | ${t.date}</li>`).join("");
 
+    // Customer message reply
+    const lastMsg = u.messages.slice(-1)[0] || {text:"No messages", reply:""};
+    
     card.innerHTML = `
       <h3>${u.name}</h3>
       <p><b>Account:</b> ${u.accountNumber}</p>
+      <p><b>Email:</b> ${u.email}</p>
       <p><b>Status:</b> ${u.frozen ? "Frozen" : "Active"}</p>
       <p><b>Balance:</b> $${u.balance}</p>
       <p><b>Transactions:</b></p>
-      <ul>${transactions}</ul>
+      <ul>${transactions || "<li>No transactions yet</li>"}</ul>
       <button onclick="toggleFreeze(${i})">${u.frozen ? "Unfreeze" : "Freeze"}</button>
-      <textarea id="reply${i}" placeholder="Reply to customer"></textarea>
+      <p><b>Last Customer Message:</b> ${lastMsg.text}</p>
+      <textarea id="reply${i}" placeholder="Reply to customer">${lastMsg.reply}</textarea>
       <button onclick="sendReply(${i})">Send Reply</button>
     `;
+
     container.appendChild(card);
   });
 }
 
-//------------------- FREEZE / UNFREEZE ---------
+// ================== FREEZE / UNFREEZE =================
 function toggleFreeze(index){
   users[index].frozen = !users[index].frozen;
   localStorage.setItem("users", JSON.stringify(users));
   loadUsers();
 }
 
-//------------------- SEND REPLY ----------------
+// ================== SEND REPLY =================
 function sendReply(index){
   const replyText = document.getElementById(`reply${index}`).value;
   if(users[index].messages.length === 0){
