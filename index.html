@@ -2,30 +2,57 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>MyBank</title>
+<title>Standard-C Online Banking</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="index.css">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <!-- HOME -->
 <div class="screen" id="home">
-  <h2>Welcome to MyBank</h2>
+  <h2>Welcome to Standard-C Bank</h2>
   <button onclick="showLogin()">Login</button>
   <button onclick="showRegister()">Create Account</button>
 </div>
 
 <!-- REGISTER -->
 <div class="screen hidden" id="register">
-  <h2>Register</h2>
+  <h2>Create Account</h2>
+
   <input id="rName" placeholder="Full Name">
-  <input id="rEmail" placeholder="Email">
+  <input id="rDob" type="date">
+
+  <select id="rGender">
+    <option value="">Gender</option>
+    <option>Male</option>
+    <option>Female</option>
+    <option>Other</option>
+  </select>
+
+  <input id="rNationality" placeholder="Nationality">
+  <input id="rAddress" placeholder="Residential Address">
+  <input id="rId" placeholder="National ID / Passport Number">
+  <input id="rEmail" placeholder="Email Address">
+
+  <select id="rAccountType">
+    <option value="">Account Type</option>
+    <option>Savings</option>
+    <option>Current</option>
+  </select>
+
   <input id="rPin" type="password" placeholder="4-digit PIN">
-  <button onclick="sendOTP()">Send OTP</button>
+
+  <label>Upload ID Document</label>
+  <input id="rDoc" type="file" accept="image/*,.pdf">
+
+  <label>Upload Selfie</label>
+  <input id="rSelfie" type="file" accept="image/*">
+
+  <button onclick="sendOTP()">Send Email OTP</button>
 
   <div id="otpBox" class="hidden">
     <input id="otpInput" placeholder="Enter OTP">
-    <button onclick="verifyOTP()">Verify & Register</button>
+    <button onclick="verifyOTP()">Verify & Create Account</button>
   </div>
 
   <p id="regError"></p>
@@ -44,9 +71,9 @@
 
 <!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
-  <h3>MyBank</h3>
-  <a href="#" onclick="closeSidebar()">Dashboard</a>
-  <a href="#" onclick="logout()">Logout</a>
+  <h3>Standard-C</h3>
+  <a onclick="closeSidebar()">Dashboard</a>
+  <a onclick="logout()">Logout</a>
 </div>
 
 <!-- DASHBOARD -->
@@ -56,8 +83,13 @@
     <span class="menu" onclick="openSidebar()">☰</span>
     <div>
       <strong>Dashboard</strong><br>
-      <small id="rates">USD: -- | EUR: --</small>
+      <small>USD 1.00 | EUR 0.92</small>
     </div>
+  </div>
+
+  <div class="card">
+    <h4>Account Number</h4>
+    <strong id="accNumber"></strong>
   </div>
 
   <div class="card">
@@ -94,51 +126,73 @@ function goHome(){
   home.classList.remove("hidden");
 }
 
-/* OTP (Demo) */
+/* Account Number */
+function generateAccountNumber(){
+  const year = new Date().getFullYear();
+  const rand = Math.floor(10000000 + Math.random()*90000000);
+  return `SCB-${year}-${rand}`;
+}
+
+/* OTP */
 function sendOTP(){
-  if(!rName.value || !rEmail.value || !rPin.value){
-    regError.textContent="Fill all fields";
+  if(
+    !rName.value || !rDob.value || !rGender.value ||
+    !rNationality.value || !rAddress.value || !rId.value ||
+    !rEmail.value || !rAccountType.value || !rPin.value ||
+    !rDoc.files[0] || !rSelfie.files[0]
+  ){
+    regError.textContent = "All fields required";
     return;
   }
   generatedOTP = Math.floor(100000 + Math.random()*900000).toString();
-  alert("Demo OTP sent to email:\n" + generatedOTP);
+  alert("Demo OTP: " + generatedOTP);
   otpBox.classList.remove("hidden");
+}
+
+function fileToBase64(file, cb){
+  const r = new FileReader();
+  r.onload = () => cb(r.result);
+  r.readAsDataURL(file);
 }
 
 function verifyOTP(){
   if(otpInput.value !== generatedOTP){
-    regError.textContent="Invalid OTP";
+    regError.textContent = "Invalid OTP";
     return;
   }
-  users.push({
-    name:rName.value,
-    email:rEmail.value,
-    pin:rPin.value,
-    balance:0,
-    transactions:[],
-    messages:[]
+
+  fileToBase64(rDoc.files[0], doc64=>{
+    fileToBase64(rSelfie.files[0], selfie64=>{
+      users.push({
+        accountNumber: generateAccountNumber(),
+        name:rName.value,
+        email:rEmail.value,
+        pin:rPin.value,
+        balance:0,
+        transactions:[],
+        messages:[],
+        kyc:{document:doc64,selfie:selfie64,status:"Pending"}
+      });
+      localStorage.setItem("users",JSON.stringify(users));
+      alert("Account created. KYC pending.");
+      goHome();
+    });
   });
-  localStorage.setItem("users", JSON.stringify(users));
-  alert("Registration successful");
-  goHome();
 }
 
 /* Login */
 function loginUser(){
   currentUser = users.find(u=>u.email===email.value && u.pin===pin.value);
-  if(!currentUser){
-    error.textContent="Invalid login";
-    return;
-  }
+  if(!currentUser){ error.textContent="Invalid login"; return; }
   login.classList.add("hidden");
   dashboard.classList.remove("hidden");
-  loadRates();
   render();
 }
 
 /* Dashboard */
 function render(){
-  balance.textContent="$"+currentUser.balance.toFixed(2);
+  accNumber.textContent = currentUser.accountNumber;
+  balance.textContent = "$"+currentUser.balance.toFixed(2);
   transactions.innerHTML="";
   currentUser.transactions.forEach(t=>{
     transactions.innerHTML+=`<li>${t.type}: $${t.amount}</li>`;
@@ -154,36 +208,20 @@ function sendMessage(){
   alert("Message sent");
 }
 
-/* Sidebar control */
+/* Sidebar */
 function openSidebar(){
   sidebar.classList.add("open");
-  sidebarOpen = true;
-  history.pushState({sidebar:true}, "");
+  sidebarOpen=true;
+  history.pushState({},"");
 }
-
 function closeSidebar(){
   sidebar.classList.remove("open");
-  sidebarOpen = false;
+  sidebarOpen=false;
 }
-
-/* Phone BACK button closes sidebar */
-window.addEventListener("popstate", ()=>{
-  if(sidebarOpen){
-    closeSidebar();
-  }
-});
-
-/* Currency exchange (demo values) */
-function loadRates(){
-  const usd = 1.00;
-  const eur = 0.92;
-  rates.textContent = `USD: ${usd} | EUR: ${eur}`;
-}
+window.onpopstate=()=>{ if(sidebarOpen) closeSidebar(); }
 
 /* Logout */
-function logout(){
-  location.reload();
-}
+function logout(){ location.reload(); }
 </script>
 
 </body>
