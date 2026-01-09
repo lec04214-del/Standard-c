@@ -1,64 +1,90 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Admin Dashboard</title>
+<title>Standard-C Admin Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="admin.css">
 </head>
 <body>
 
-<div id="adminLogin">
+<!-- ADMIN LOGIN -->
+<div class="screen" id="adminLogin">
   <h1>Admin Login</h1>
   <input id="adminPin" type="password" placeholder="Admin PIN">
   <button onclick="login()">Login</button>
   <p id="err" class="error"></p>
 </div>
 
-<div id="panel" class="hidden">
+<!-- ADMIN PANEL -->
+<div id="adminPanel" class="hidden">
   <h1>Admin Dashboard</h1>
-  <div id="users"></div>
+  <div id="usersContainer"></div>
 </div>
 
 <script>
-const ADMIN_PIN="9999";
-let users=JSON.parse(localStorage.getItem("users"))||[];
+//------------------- DATA -----------------------
+let users = JSON.parse(localStorage.getItem("users")) || [];
+const ADMIN_PIN = "9999";
 
+//------------------- LOGIN ---------------------
 function login(){
-  if(adminPin.value!==ADMIN_PIN){err.textContent="Wrong PIN";return;}
-  adminLogin.style.display="none";
-  panel.classList.remove("hidden");
-  load();
+  const pin = document.getElementById("adminPin").value;
+  const err = document.getElementById("err");
+  if(pin !== ADMIN_PIN){
+    err.textContent = "Invalid Admin PIN";
+    return;
+  }
+  document.getElementById("adminLogin").classList.add("hidden");
+  document.getElementById("adminPanel").classList.remove("hidden");
+  loadUsers();
 }
 
-function load(){
-  usersDiv.innerHTML="";
+//------------------- LOAD USERS ----------------
+function loadUsers(){
+  const container = document.getElementById("usersContainer");
+  container.innerHTML = "";
+
   users.forEach((u,i)=>{
-    usersDiv.innerHTML+=`
-    <div class="card">
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const transactions = u.transactions.map(t => `<li>${t.type} | $${t.amount} | ${t.date}</li>`).join("");
+
+    card.innerHTML = `
       <h3>${u.name}</h3>
-      <p>${u.accountNumber}</p>
-      <p>Status: ${u.frozen?"Frozen":"Active"}</p>
-      <p>Balance: $${u.balance}</p>
-      <p>Transactions: ${u.transactions.length}</p>
-      <button onclick="toggle(${i})">${u.frozen?"Unfreeze":"Freeze"}</button>
-      <textarea id="r${i}" placeholder="Reply to customer"></textarea>
-      <button onclick="reply(${i})">Send Reply</button>
-    </div>`;
+      <p><b>Account:</b> ${u.accountNumber}</p>
+      <p><b>Status:</b> ${u.frozen ? "Frozen" : "Active"}</p>
+      <p><b>Balance:</b> $${u.balance}</p>
+      <p><b>Transactions:</b></p>
+      <ul>${transactions}</ul>
+      <button onclick="toggleFreeze(${i})">${u.frozen ? "Unfreeze" : "Freeze"}</button>
+      <textarea id="reply${i}" placeholder="Reply to customer"></textarea>
+      <button onclick="sendReply(${i})">Send Reply</button>
+    `;
+    container.appendChild(card);
   });
 }
 
-function toggle(i){
-  users[i].frozen=!users[i].frozen;
-  localStorage.setItem("users",JSON.stringify(users));
-  load();
+//------------------- FREEZE / UNFREEZE ---------
+function toggleFreeze(index){
+  users[index].frozen = !users[index].frozen;
+  localStorage.setItem("users", JSON.stringify(users));
+  loadUsers();
 }
 
-function reply(i){
-  const msg=users[i].messages.slice(-1)[0];
-  if(msg) msg.reply=document.getElementById("r"+i).value;
-  localStorage.setItem("users",JSON.stringify(users));
+//------------------- SEND REPLY ----------------
+function sendReply(index){
+  const replyText = document.getElementById(`reply${index}`).value;
+  if(users[index].messages.length === 0){
+    alert("No customer messages to reply to.");
+    return;
+  }
+  users[index].messages[users[index].messages.length-1].reply = replyText;
+  localStorage.setItem("users", JSON.stringify(users));
+  alert("Reply sent.");
+  loadUsers();
 }
 </script>
-
 </body>
 </html>
