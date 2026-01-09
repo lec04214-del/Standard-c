@@ -8,14 +8,14 @@
 <body>
 
 <div id="adminLogin">
-  <h2>Admin Login</h2>
+  <h1>Admin Login</h1>
   <input id="adminPin" type="password" placeholder="Admin PIN">
   <button onclick="login()">Login</button>
-  <p id="err"></p>
+  <p id="err" class="error"></p>
 </div>
 
 <div id="panel" class="hidden">
-  <h2>Admin Dashboard</h2>
+  <h1>Admin Dashboard</h1>
   <div id="users"></div>
 </div>
 
@@ -35,13 +35,13 @@ function load(){
   users.forEach((u,i)=>{
     usersDiv.innerHTML+=`
     <div class="card">
-      <p><b>${u.name}</b></p>
+      <h3>${u.name}</h3>
       <p>${u.accountNumber}</p>
       <p>Status: ${u.frozen?"Frozen":"Active"}</p>
-      <button onclick="toggle(${i})">${u.frozen?"Unfreeze":"Freeze"}</button>
       <p>Balance: $${u.balance}</p>
       <p>Transactions: ${u.transactions.length}</p>
-      <textarea id="r${i}" placeholder="Reply"></textarea>
+      <button onclick="toggle(${i})">${u.frozen?"Unfreeze":"Freeze"}</button>
+      <textarea id="r${i}" placeholder="Reply to customer"></textarea>
       <button onclick="reply(${i})">Send Reply</button>
     </div>`;
   });
