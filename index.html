@@ -2,92 +2,185 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Online Banking</title>
+<title>MyBank</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="index.css">
 </head>
 <body>
 
+<!-- HOME -->
+<div class="screen" id="home">
+  <h2>Welcome to MyBank</h2>
+  <button onclick="showLogin()">Login</button>
+  <button onclick="showRegister()">Create Account</button>
+</div>
+
+<!-- REGISTER -->
+<div class="screen hidden" id="register">
+  <h2>Register</h2>
+  <input id="rName" placeholder="Full Name">
+  <input id="rEmail" placeholder="Email">
+  <input id="rPin" type="password" placeholder="4-digit PIN">
+  <button onclick="sendOTP()">Send OTP</button>
+
+  <div id="otpBox" class="hidden">
+    <input id="otpInput" placeholder="Enter OTP">
+    <button onclick="verifyOTP()">Verify & Register</button>
+  </div>
+
+  <p id="regError"></p>
+  <button onclick="goHome()">Back</button>
+</div>
+
 <!-- LOGIN -->
-<div class="screen" id="loginScreen">
-  <h2>User Login</h2>
+<div class="screen hidden" id="login">
+  <h2>Login</h2>
   <input id="email" placeholder="Email">
-  <input id="pin" type="password" placeholder="4-digit PIN">
-  <button onclick="login()">Login</button>
+  <input id="pin" type="password" placeholder="PIN">
+  <button onclick="loginUser()">Login</button>
+  <button onclick="goHome()">Back</button>
   <p id="error"></p>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <h3>MyBank</h3>
+  <a href="#" onclick="closeSidebar()">Dashboard</a>
+  <a href="#" onclick="logout()">Logout</a>
 </div>
 
 <!-- DASHBOARD -->
 <div id="dashboard" class="hidden">
 
-<header class="header">
-  <h2>MyBank</h2>
-  <button onclick="logout()">Logout</button>
-</header>
-
-<main class="content">
+  <div class="header">
+    <span class="menu" onclick="openSidebar()">☰</span>
+    <div>
+      <strong>Dashboard</strong><br>
+      <small id="rates">USD: -- | EUR: --</small>
+    </div>
+  </div>
 
   <div class="card">
-    <h3>Account Balance</h3>
+    <h4>Balance</h4>
     <strong id="balance">$0.00</strong>
   </div>
 
   <div class="card">
-    <h3>Transactions</h3>
+    <h4>Transactions</h4>
     <ul id="transactions"></ul>
   </div>
 
   <div class="card">
-    <h3>Customer Service</h3>
-    <textarea id="message" placeholder="Write your message..."></textarea>
+    <h4>Customer Support</h4>
+    <textarea id="message" placeholder="Write message"></textarea>
     <button onclick="sendMessage()">Send</button>
     <p id="adminReply"></p>
   </div>
 
-</main>
 </div>
 
 <script>
 let users = JSON.parse(localStorage.getItem("users")) || [];
 let currentUser = null;
+let generatedOTP = "";
+let sidebarOpen = false;
 
-function login(){
-  currentUser = users.find(
-    u => u.email === email.value && u.pin === pin.value
-  );
-  if(!currentUser){
-    error.textContent = "Invalid login details";
+/* Navigation */
+function showLogin(){ home.classList.add("hidden"); login.classList.remove("hidden"); }
+function showRegister(){ home.classList.add("hidden"); register.classList.remove("hidden"); }
+function goHome(){
+  login.classList.add("hidden");
+  register.classList.add("hidden");
+  home.classList.remove("hidden");
+}
+
+/* OTP (Demo) */
+function sendOTP(){
+  if(!rName.value || !rEmail.value || !rPin.value){
+    regError.textContent="Fill all fields";
     return;
   }
-  loginScreen.style.display = "none";
+  generatedOTP = Math.floor(100000 + Math.random()*900000).toString();
+  alert("Demo OTP sent to email:\n" + generatedOTP);
+  otpBox.classList.remove("hidden");
+}
+
+function verifyOTP(){
+  if(otpInput.value !== generatedOTP){
+    regError.textContent="Invalid OTP";
+    return;
+  }
+  users.push({
+    name:rName.value,
+    email:rEmail.value,
+    pin:rPin.value,
+    balance:0,
+    transactions:[],
+    messages:[]
+  });
+  localStorage.setItem("users", JSON.stringify(users));
+  alert("Registration successful");
+  goHome();
+}
+
+/* Login */
+function loginUser(){
+  currentUser = users.find(u=>u.email===email.value && u.pin===pin.value);
+  if(!currentUser){
+    error.textContent="Invalid login";
+    return;
+  }
+  login.classList.add("hidden");
   dashboard.classList.remove("hidden");
+  loadRates();
   render();
 }
 
+/* Dashboard */
 function render(){
-  balance.textContent = "$" + currentUser.balance.toFixed(2);
-
-  transactions.innerHTML = "";
-  currentUser.transactions.forEach(t => {
-    transactions.innerHTML += `<li>${t.type}: $${t.amount}</li>`;
+  balance.textContent="$"+currentUser.balance.toFixed(2);
+  transactions.innerHTML="";
+  currentUser.transactions.forEach(t=>{
+    transactions.innerHTML+=`<li>${t.type}: $${t.amount}</li>`;
   });
-
-  const lastMessage = currentUser.messages.slice(-1)[0];
-  adminReply.textContent = lastMessage?.reply || "";
+  const m=currentUser.messages.slice(-1)[0];
+  adminReply.textContent=m?.reply||"";
 }
 
 function sendMessage(){
-  if(!message.value) return;
-  currentUser.messages.push({ text: message.value, reply: "" });
-  save();
-  message.value = "";
-  alert("Message sent to support");
+  currentUser.messages.push({text:message.value,reply:""});
+  localStorage.setItem("users",JSON.stringify(users));
+  message.value="";
+  alert("Message sent");
 }
 
-function save(){
-  localStorage.setItem("users", JSON.stringify(users));
+/* Sidebar control */
+function openSidebar(){
+  sidebar.classList.add("open");
+  sidebarOpen = true;
+  history.pushState({sidebar:true}, "");
 }
 
+function closeSidebar(){
+  sidebar.classList.remove("open");
+  sidebarOpen = false;
+}
+
+/* Phone BACK button closes sidebar */
+window.addEventListener("popstate", ()=>{
+  if(sidebarOpen){
+    closeSidebar();
+  }
+});
+
+/* Currency exchange (demo values) */
+function loadRates(){
+  const usd = 1.00;
+  const eur = 0.92;
+  rates.textContent = `USD: ${usd} | EUR: ${eur}`;
+}
+
+/* Logout */
 function logout(){
   location.reload();
 }
