@@ -16,234 +16,117 @@
 
 <!-- HOME -->
 <div class="screen" id="home">
-  <h2>Welcome to Standard-C Bank</h2>
-  <button onclick="showLogin()">Login</button>
-  <button onclick="showRegister()">Create Account</button>
+  <h1>Welcome to Standard-C Bank</h1>
+  <div class="btn-group">
+    <button onclick="showLogin()">Login</button>
+    <button onclick="showRegister()">Create Account</button>
+  </div>
 </div>
 
 <!-- REGISTER -->
 <div class="screen hidden" id="register">
-  <h2>Create Account</h2>
-  <input id="rName" placeholder="Full Name">
-  <input id="rDob" type="date">
-  <select id="rGender">
-    <option value="">Gender</option>
-    <option>Male</option>
-    <option>Female</option>
-    <option>Other</option>
-  </select>
-  <input id="rNationality" placeholder="Nationality">
-  <input id="rAddress" placeholder="Residential Address">
-  <input id="rId" placeholder="National ID / Passport">
-  <input id="rEmail" placeholder="Email Address">
-  <select id="rAccountType">
-    <option value="">Account Type</option>
-    <option>Savings</option>
-    <option>Current</option>
-  </select>
-  <input id="rPin" type="password" placeholder="4-digit PIN">
-  <label>ID Document</label>
-  <input id="rDoc" type="file" accept="image/*,.pdf">
-  <label>Selfie</label>
-  <input id="rSelfie" type="file" accept="image/*">
-  <button onclick="sendOTP()">Send Email OTP</button>
-  <div id="otpBox" class="hidden">
-    <input id="otpInput" placeholder="Enter OTP">
-    <button onclick="verifyOTP()">Verify & Create Account</button>
+  <h1>Create Account</h1>
+  <div class="form-group">
+    <input id="rName" placeholder="Full Name">
+    <input id="rDob" type="date">
+    <select id="rGender">
+      <option value="">Gender</option>
+      <option>Male</option>
+      <option>Female</option>
+      <option>Other</option>
+    </select>
+    <input id="rNationality" placeholder="Nationality">
+    <input id="rAddress" placeholder="Residential Address">
+    <input id="rId" placeholder="National ID / Passport">
+    <input id="rEmail" placeholder="Email Address">
+    <select id="rAccountType">
+      <option value="">Account Type</option>
+      <option>Savings</option>
+      <option>Current</option>
+    </select>
+    <input id="rPin" type="password" placeholder="4-digit PIN">
+    <label>ID Document</label>
+    <input id="rDoc" type="file" accept="image/*,.pdf">
+    <label>Selfie</label>
+    <input id="rSelfie" type="file" accept="image/*">
+    <button onclick="sendOTP()">Send Email OTP</button>
+    <div id="otpBox" class="hidden">
+      <input id="otpInput" placeholder="Enter OTP">
+      <button onclick="verifyOTP()">Verify & Create Account</button>
+    </div>
+    <p id="regError" class="error"></p>
+    <button onclick="goHome()" class="secondary-btn">Back</button>
   </div>
-  <p id="regError"></p>
-  <button onclick="goHome()">Back</button>
 </div>
 
 <!-- LOGIN -->
 <div class="screen hidden" id="login">
-  <h2>Login</h2>
-  <input id="email" placeholder="Email">
-  <input id="pin" type="password" placeholder="PIN">
-  <button onclick="loginUser()">Login</button>
-  <button onclick="goHome()">Back</button>
-  <p id="error"></p>
+  <h1>Login</h1>
+  <div class="form-group">
+    <input id="email" placeholder="Email">
+    <input id="pin" type="password" placeholder="PIN">
+    <button onclick="loginUser()">Login</button>
+    <button onclick="goHome()" class="secondary-btn">Back</button>
+    <p id="error" class="error"></p>
+  </div>
 </div>
 
 <!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
-  <h3>Standard-C</h3>
-  <a onclick="closeSidebar()">Dashboard</a>
-  <a onclick="logout()">Logout</a>
+  <div class="sidebar-header">
+    <h2>Standard-C</h2>
+    <span onclick="closeSidebar()" class="close-btn">&times;</span>
+  </div>
+  <ul>
+    <li onclick="closeSidebar()">Dashboard</li>
+    <li onclick="logout()">Logout</li>
+  </ul>
 </div>
 
 <!-- DASHBOARD -->
 <div id="dashboard" class="hidden">
-
   <div class="header">
     <span class="menu" onclick="openSidebar()">☰</span>
-    <div>
-      <strong>Dashboard</strong><br>
-      <small>USD 1.00 | EUR 0.92</small>
+    <h2>Dashboard</h2>
+    <div class="currency">
+      <span>USD 1.00</span> | <span>EUR 0.92</span>
     </div>
   </div>
 
-  <div class="card">
-    <h4>Account Number</h4>
-    <strong id="accNumber"></strong>
-    <p id="freezeStatus"></p>
-  </div>
+  <div class="cards-container">
+    <div class="card">
+      <h3>Account Number</h3>
+      <p id="accNumber"></p>
+      <span id="freezeStatus"></span>
+    </div>
 
-  <div class="card">
-    <h4>Balance</h4>
-    <strong id="balance">$0.00</strong>
-  </div>
+    <div class="card">
+      <h3>Balance</h3>
+      <p id="balance">$0.00</p>
+    </div>
 
-  <div class="card">
-    <h4>Transfer Funds</h4>
-    <input id="toAcc" placeholder="Recipient Account Number">
-    <input id="amount" type="number" placeholder="Amount">
-    <button onclick="transfer()">Send</button>
-    <p id="transferMsg"></p>
-  </div>
+    <div class="card">
+      <h3>Transfer Funds</h3>
+      <input id="toAcc" placeholder="Recipient Account Number">
+      <input id="amount" type="number" placeholder="Amount">
+      <button onclick="transfer()">Send</button>
+      <p id="transferMsg" class="success"></p>
+    </div>
 
-  <div class="card">
-    <h4>Transaction History</h4>
-    <ul id="transactions"></ul>
-  </div>
+    <div class="card">
+      <h3>Transaction History</h3>
+      <ul id="transactions"></ul>
+    </div>
 
-  <div class="card">
-    <h4>Customer Support</h4>
-    <textarea id="message" placeholder="Write message"></textarea>
-    <button onclick="sendMessage()">Send</button>
-    <p id="adminReply"></p>
+    <div class="card">
+      <h3>Customer Support</h3>
+      <textarea id="message" placeholder="Write message"></textarea>
+      <button onclick="sendMessage()">Send</button>
+      <p id="adminReply"></p>
+    </div>
   </div>
-
 </div>
 
-<script>
-let users = JSON.parse(localStorage.getItem("users")) || [];
-let currentUser = null;
-let generatedOTP = "";
-let sidebarOpen = false;
-
-/* NAV */
-function showLogin(){ home.classList.add("hidden"); login.classList.remove("hidden"); }
-function showRegister(){ home.classList.add("hidden"); register.classList.remove("hidden"); }
-function goHome(){ login.classList.add("hidden"); register.classList.add("hidden"); home.classList.remove("hidden"); }
-
-/* EMAIL */
-function sendEmail(to,subject,message){
-  emailjs.send("YOUR_SERVICE_ID","YOUR_TEMPLATE_ID",{
-    to_email:to,
-    subject:subject,
-    message:message
-  });
-}
-
-/* ACCOUNT NUMBER */
-function generateAccountNumber(){
-  const y=new Date().getFullYear();
-  return `SCB-${y}-${Math.floor(10000000+Math.random()*90000000)}`;
-}
-
-/* OTP */
-function sendOTP(){
-  if(!rName.value||!rEmail.value||!rPin.value||!rDoc.files[0]||!rSelfie.files[0]){
-    regError.textContent="All fields required";return;
-  }
-  generatedOTP=Math.floor(100000+Math.random()*900000).toString();
-  sendEmail(rEmail.value,"OTP Verification","Your OTP: "+generatedOTP);
-  otpBox.classList.remove("hidden");
-}
-
-function file64(f,cb){const r=new FileReader();r.onload=()=>cb(r.result);r.readAsDataURL(f);}
-
-function verifyOTP(){
-  if(otpInput.value!==generatedOTP){regError.textContent="Invalid OTP";return;}
-  file64(rDoc.files[0],d=>{
-    file64(rSelfie.files[0],s=>{
-      users.push({
-        accountNumber:generateAccountNumber(),
-        name:rName.value,
-        email:rEmail.value,
-        pin:rPin.value,
-        balance:0,
-        frozen:false,
-        transactions:[],
-        messages:[],
-        kyc:{document:d,selfie:s,status:"Pending"}
-      });
-      localStorage.setItem("users",JSON.stringify(users));
-      alert("Account created. KYC pending.");
-      goHome();
-    });
-  });
-}
-
-/* LOGIN */
-function loginUser(){
-  currentUser=users.find(u=>u.email===email.value&&u.pin===pin.value);
-  if(!currentUser){error.textContent="Invalid login";return;}
-  login.classList.add("hidden");
-  dashboard.classList.remove("hidden");
-  sendEmail(currentUser.email,"Login Alert","Your account was accessed.");
-  render();
-}
-
-/* DASHBOARD */
-function render(){
-  accNumber.textContent=currentUser.accountNumber;
-  balance.textContent="$"+currentUser.balance.toFixed(2);
-  freezeStatus.textContent=currentUser.frozen?"ACCOUNT FROZEN":"ACTIVE";
-  freezeStatus.style.color=currentUser.frozen?"red":"green";
-
-  transactions.innerHTML="";
-  currentUser.transactions.slice().reverse().forEach(t=>{
-    transactions.innerHTML+=`
-      <li>
-        <strong>${t.type}</strong> | $${t.amount} 
-        <small>${t.date}</small>
-      </li>`;
-  });
-
-  const m=currentUser.messages.slice(-1)[0];
-  adminReply.textContent=m?.reply||"";
-}
-
-/* TRANSFER */
-function transfer(){
-  if(currentUser.frozen){transferMsg.textContent="Account frozen";return;}
-  const receiver=users.find(u=>u.accountNumber===toAcc.value);
-  const amt=Number(amount.value);
-  if(!receiver||amt<=0||currentUser.balance<amt){transferMsg.textContent="Transfer failed";return;}
-  const now=new Date().toLocaleString();
-
-  currentUser.balance-=amt;
-  receiver.balance+=amt;
-
-  currentUser.transactions.push({type:"Transfer Out",amount:amt,date:now});
-  receiver.transactions.push({type:"Transfer In",amount:amt,date:now});
-
-  localStorage.setItem("users",JSON.stringify(users));
-  sendEmail(currentUser.email,"Transfer Sent",`You sent $${amt} to ${receiver.accountNumber}`);
-  sendEmail(receiver.email,"Transfer Received",`You received $${amt} from ${currentUser.accountNumber}`);
-
-  transferMsg.textContent="Transfer successful";
-  render();
-}
-
-/* CUSTOMER SUPPORT */
-function sendMessage(){
-  currentUser.messages.push({text:message.value,reply:""});
-  localStorage.setItem("users",JSON.stringify(users));
-  message.value="";
-  alert("Message sent");
-}
-
-/* SIDEBAR */
-function openSidebar(){sidebar.classList.add("open");sidebarOpen=true;history.pushState({}, "");}
-function closeSidebar(){sidebar.classList.remove("open");sidebarOpen=false;}
-window.onpopstate=()=>{if(sidebarOpen)closeSidebar();}
-
-/* LOGOUT */
-function logout(){location.reload();}
-</script>
-
+<script src="app.js"></script>
 </body>
-      </html>
+</html>
