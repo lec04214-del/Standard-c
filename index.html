@@ -4,9 +4,7 @@
 <meta charset="UTF-8">
 <title>Standard-C Online Banking</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="index.css">
-
-<!-- EMAILJS -->
+<link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 <script>
 (function(){ emailjs.init("YOUR_PUBLIC_KEY"); })();
@@ -127,6 +125,147 @@
   </div>
 </div>
 
-<script src="app.js"></script>
+<script>
+//------------------- DATA -----------------------
+let users = JSON.parse(localStorage.getItem("users")) || [];
+let currentUser = null;
+let generatedOTP = "";
+let sidebarOpen = false;
+
+//------------------- NAV ------------------------
+function showLogin(){ home.classList.add("hidden"); login.classList.remove("hidden"); }
+function showRegister(){ home.classList.add("hidden"); register.classList.remove("hidden"); }
+function goHome(){ login.classList.add("hidden"); register.classList.add("hidden"); home.classList.remove("hidden"); }
+
+//------------------- EMAIL ----------------------
+function sendEmail(to,subject,message){
+  emailjs.send("YOUR_SERVICE_ID","YOUR_TEMPLATE_ID",{
+    to_email:to,
+    subject:subject,
+    message:message
+  });
+}
+
+//------------------- ACCOUNT --------------------
+function generateAccountNumber(){
+  const y=new Date().getFullYear();
+  return `SCB-${y}-${Math.floor(10000000+Math.random()*90000000)}`;
+}
+
+//------------------- OTP ------------------------
+function sendOTP(){
+  if(!rName.value||!rEmail.value||!rPin.value||!rDoc.files[0]||!rSelfie.files[0]){
+    regError.textContent="All fields required"; return;
+  }
+  generatedOTP = Math.floor(100000 + Math.random()*900000).toString();
+  sendEmail(rEmail.value,"OTP Verification","Your OTP: "+generatedOTP);
+  otpBox.classList.remove("hidden");
+}
+
+function file64(f, cb){ const r=new FileReader(); r.onload=()=>cb(r.result); r.readAsDataURL(f); }
+
+function verifyOTP(){
+  if(otpInput.value!==generatedOTP){ regError.textContent="Invalid OTP"; return; }
+  file64(rDoc.files[0], d=>{
+    file64(rSelfie.files[0], s=>{
+      users.push({
+        accountNumber: generateAccountNumber(),
+        name: rName.value,
+        email: rEmail.value,
+        pin: rPin.value,
+        balance: 0,
+        frozen: false,
+        transactions: [],
+        messages: [],
+        kyc: {document: d, selfie: s, status: "Pending"}
+      });
+      localStorage.setItem("users", JSON.stringify(users));
+      alert("Account created. KYC pending.");
+      goHome();
+    });
+  });
+}
+
+//------------------- LOGIN ----------------------
+function loginUser(){
+  currentUser = users.find(u => u.email===email.value && u.pin===pin.value);
+  if(!currentUser){ error.textContent="Invalid login"; return; }
+  login.classList.add("hidden");
+  dashboard.classList.remove("hidden");
+  sendEmail(currentUser.email,"Login Alert","Your account was accessed.");
+  render();
+}
+
+//------------------- DASHBOARD ------------------
+function render(){
+  const accNumberEl = document.getElementById("accNumber");
+  const balanceEl = document.getElementById("balance");
+  const freezeStatusEl = document.getElementById("freezeStatus");
+  const transactionsEl = document.getElementById("transactions");
+  const adminReplyEl = document.getElementById("adminReply");
+  
+  accNumberEl.textContent = currentUser.accountNumber;
+  balanceEl.textContent = "$"+currentUser.balance.toFixed(2);
+  freezeStatusEl.textContent = currentUser.frozen ? "ACCOUNT FROZEN" : "ACTIVE";
+  freezeStatusEl.style.color = currentUser.frozen ? "red" : "green";
+
+  transactionsEl.innerHTML = "";
+  currentUser.transactions.slice().reverse().forEach(t=>{
+    const li = document.createElement("li");
+    li.innerHTML = `<strong>${t.type}</strong> | $${t.amount} <small>${t.date}</small>`;
+    transactionsEl.appendChild(li);
+  });
+
+  const lastMsg = currentUser.messages.slice(-1)[0];
+  adminReplyEl.textContent = lastMsg ? lastMsg.reply : "";
+}
+
+//------------------- TRANSFER -------------------
+function transfer(){
+  const toAcc = document.getElementById("toAcc").value;
+  const amount = Number(document.getElementById("amount").value);
+  const transferMsg = document.getElementById("transferMsg");
+
+  if(currentUser.frozen){ transferMsg.textContent="Account frozen"; return; }
+
+  const receiver = users.find(u => u.accountNumber===toAcc);
+  if(!receiver || amount<=0 || currentUser.balance<amount){ transferMsg.textContent="Transfer failed"; return; }
+
+  const now = new Date().toLocaleString();
+  currentUser.balance -= amount;
+  receiver.balance += amount;
+
+  currentUser.transactions.push({type:"Transfer Out", amount: amount, date: now});
+  receiver.transactions.push({type:"Transfer In", amount: amount, date: now});
+
+  localStorage.setItem("users", JSON.stringify(users));
+
+  sendEmail(currentUser.email,"Transfer Sent",`You sent $${amount} to ${receiver.accountNumber}`);
+  sendEmail(receiver.email,"Transfer Received",`You received $${amount} from ${currentUser.accountNumber}`);
+
+  transferMsg.textContent="Transfer successful";
+  render();
+}
+
+//------------------- CUSTOMER SUPPORT ------------
+function sendMessage(){
+  const msgEl = document.getElementById("message");
+  currentUser.messages.push({text: msgEl.value, reply: ""});
+  localStorage.setItem("users", JSON.stringify(users));
+  msgEl.value="";
+  alert("Message sent");
+  render();
+}
+
+//------------------- SIDEBAR --------------------
+const sidebar = document.getElementById("sidebar");
+function openSidebar(){ sidebar.classList.add("open"); sidebarOpen=true; history.pushState({}, ""); }
+function closeSidebar(){ sidebar.classList.remove("open"); sidebarOpen=false; }
+window.onpopstate = ()=>{ if(sidebarOpen) closeSidebar(); }
+
+//------------------- LOGOUT ---------------------
+function logout(){ location.reload(); }
+</script>
+
 </body>
 </html>
