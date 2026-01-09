@@ -4,14 +4,12 @@
 <meta charset="UTF-8">
 <title>Standard-C Online Banking</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="index.css">
+<link rel="stylesheet" href="style.css">
 
 <!-- EMAILJS -->
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 <script>
-(function(){
-  emailjs.init("YOUR_PUBLIC_KEY");
-})();
+(function(){ emailjs.init("YOUR_PUBLIC_KEY"); })();
 </script>
 </head>
 <body>
@@ -26,43 +24,33 @@
 <!-- REGISTER -->
 <div class="screen hidden" id="register">
   <h2>Create Account</h2>
-
   <input id="rName" placeholder="Full Name">
   <input id="rDob" type="date">
-
   <select id="rGender">
     <option value="">Gender</option>
     <option>Male</option>
     <option>Female</option>
     <option>Other</option>
   </select>
-
   <input id="rNationality" placeholder="Nationality">
   <input id="rAddress" placeholder="Residential Address">
   <input id="rId" placeholder="National ID / Passport">
   <input id="rEmail" placeholder="Email Address">
-
   <select id="rAccountType">
     <option value="">Account Type</option>
     <option>Savings</option>
     <option>Current</option>
   </select>
-
   <input id="rPin" type="password" placeholder="4-digit PIN">
-
   <label>ID Document</label>
   <input id="rDoc" type="file" accept="image/*,.pdf">
-
   <label>Selfie</label>
   <input id="rSelfie" type="file" accept="image/*">
-
   <button onclick="sendOTP()">Send Email OTP</button>
-
   <div id="otpBox" class="hidden">
     <input id="otpInput" placeholder="Enter OTP">
     <button onclick="verifyOTP()">Verify & Create Account</button>
   </div>
-
   <p id="regError"></p>
   <button onclick="goHome()">Back</button>
 </div>
@@ -106,7 +94,6 @@
     <strong id="balance">$0.00</strong>
   </div>
 
-  <!-- TRANSFER -->
   <div class="card">
     <h4>Transfer Funds</h4>
     <input id="toAcc" placeholder="Recipient Account Number">
@@ -115,13 +102,11 @@
     <p id="transferMsg"></p>
   </div>
 
-  <!-- TRANSACTIONS -->
   <div class="card">
-    <h4>Transactions</h4>
+    <h4>Transaction History</h4>
     <ul id="transactions"></ul>
   </div>
 
-  <!-- CUSTOMER SERVICE -->
   <div class="card">
     <h4>Customer Support</h4>
     <textarea id="message" placeholder="Write message"></textarea>
@@ -209,8 +194,12 @@ function render(){
   freezeStatus.style.color=currentUser.frozen?"red":"green";
 
   transactions.innerHTML="";
-  currentUser.transactions.forEach(t=>{
-    transactions.innerHTML+=`<li>${t.type}: $${t.amount}</li>`;
+  currentUser.transactions.slice().reverse().forEach(t=>{
+    transactions.innerHTML+=`
+      <li>
+        <strong>${t.type}</strong> | $${t.amount} 
+        <small>${t.date}</small>
+      </li>`;
   });
 
   const m=currentUser.messages.slice(-1)[0];
@@ -220,20 +209,26 @@ function render(){
 /* TRANSFER */
 function transfer(){
   if(currentUser.frozen){transferMsg.textContent="Account frozen";return;}
-  const r=users.find(u=>u.accountNumber===toAcc.value);
-  const a=Number(amount.value);
-  if(!r||a<=0||currentUser.balance<a){transferMsg.textContent="Transfer failed";return;}
-  currentUser.balance-=a;
-  r.balance+=a;
-  currentUser.transactions.push({type:"Transfer Out",amount:a});
-  r.transactions.push({type:"Transfer In",amount:a});
+  const receiver=users.find(u=>u.accountNumber===toAcc.value);
+  const amt=Number(amount.value);
+  if(!receiver||amt<=0||currentUser.balance<amt){transferMsg.textContent="Transfer failed";return;}
+  const now=new Date().toLocaleString();
+
+  currentUser.balance-=amt;
+  receiver.balance+=amt;
+
+  currentUser.transactions.push({type:"Transfer Out",amount:amt,date:now});
+  receiver.transactions.push({type:"Transfer In",amount:amt,date:now});
+
   localStorage.setItem("users",JSON.stringify(users));
-  sendEmail(currentUser.email,"Transfer Sent","You sent $"+a);
-  sendEmail(r.email,"Transfer Received","You received $"+a);
+  sendEmail(currentUser.email,"Transfer Sent",`You sent $${amt} to ${receiver.accountNumber}`);
+  sendEmail(receiver.email,"Transfer Received",`You received $${amt} from ${currentUser.accountNumber}`);
+
+  transferMsg.textContent="Transfer successful";
   render();
 }
 
-/* SUPPORT */
+/* CUSTOMER SUPPORT */
 function sendMessage(){
   currentUser.messages.push({text:message.value,reply:""});
   localStorage.setItem("users",JSON.stringify(users));
@@ -251,4 +246,4 @@ function logout(){location.reload();}
 </script>
 
 </body>
-</html>
+      </html>
