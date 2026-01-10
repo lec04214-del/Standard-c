@@ -1,24 +1,78 @@
-body, html { margin:0; padding:0; font-family: Arial, sans-serif; }
-header { background:#0073e6; color:white; display:flex; justify-content:space-between; align-items:center; padding:10px 20px; position:fixed; width:100%; top:0; z-index:1000; }
-header h1 { margin:0; font-size:1.5em; }
-.logo { font-weight:bold; }
-.currency-exchange { margin-left:auto; margin-right:20px; }
-#menuBtn { cursor:pointer; font-size:1.5em; }
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f0f2f5;
+}
 
-nav#sidebar { position:fixed; top:50px; left:0; width:250px; background:#005bb5; height:100%; padding-top:20px; display:none; flex-direction:column; }
-nav#sidebar ul { list-style:none; padding:0; }
-nav#sidebar ul li { padding:15px 20px; color:white; cursor:pointer; }
-nav#sidebar ul li:hover { background:#003f7f; }
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #004080;
+  color: white;
+}
 
-.hidden { display:none; }
-main { padding:80px 20px; }
-.form-container { max-width:400px; margin:50px auto; padding:20px; border:1px solid #ccc; border-radius:10px; background:white; }
-input, textarea, button { width:100%; padding:10px; margin:5px 0; border-radius:5px; border:1px solid #ccc; }
-button { background:#0073e6; color:white; border:none; cursor:pointer; }
-button:hover { background:#005bb5; }
-.error { color:red; font-size:0.9em; }
-.success { color:green; font-size:0.9em; }
+#menuBtn {
+  font-size: 24px;
+  cursor: pointer;
+}
 
-#dashboard h2, #dashboard h3 { margin-top:20px; }
-#transactionList { list-style:none; padding:0; }
-#transactionList li { padding:5px 0; border-bottom:1px solid #ccc; }
+nav#sidebar {
+  width: 200px;
+  background: #003366;
+  color: white;
+  position: fixed;
+  top: 60px;
+  left: 0;
+  height: 100%;
+  padding-top: 20px;
+}
+
+nav#sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+nav#sidebar li {
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+nav#sidebar li:hover {
+  background-color: #0055a5;
+}
+
+.form-container {
+  max-width: 400px;
+  margin: 50px auto;
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+input, textarea, button {
+  width: 100%;
+  margin: 8px 0;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+button {
+  background-color: #004080;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0055a5;
+}
+
+.hidden { display: none; }
+.error { color: red; }
+.success { color: green; }
+span { cursor: pointer; color: blue; }
