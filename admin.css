@@ -1,17 +1,64 @@
-body, html { margin:0; padding:0; font-family: Arial, sans-serif; background:#f4f4f4; }
-.screen { max-width:400px; margin:100px auto; padding:20px; background:white; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.2); text-align:center; }
-.screen h2 { margin-bottom:20px; color:#0073e6; }
-.screen input { width:100%; padding:10px; margin:5px 0; border-radius:5px; border:1px solid #ccc; }
-.screen button { width:100%; padding:10px; margin-top:10px; background:#0073e6; color:white; border:none; border-radius:5px; cursor:pointer; }
-.screen button:hover { background:#005bb5; }
-.error { color:red; font-size:0.9em; margin-top:5px; }
+body {
+  font-family: Arial, sans-serif;
+  background: #f0f2f5;
+  margin: 0;
+  padding: 0;
+}
 
-#adminPanel { max-width:900px; margin:100px auto 50px auto; padding:20px; background:white; border-radius:10px; box-shadow:0 0 15px rgba(0,0,0,0.2); }
-#adminPanel h2 { color:#0073e6; text-align:center; }
+.screen {
+  max-width: 400px;
+  margin: 100px auto;
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  text-align: center;
+}
 
-#users .card { border:1px solid #ccc; padding:15px; margin:10px 0; border-radius:8px; background:#f9f9f9; }
-#users .card p { margin:5px 0; }
-#users .card input, #users .card textarea { width:calc(100% - 20px); padding:8px; margin:5px 0; border-radius:5px; border:1px solid #ccc; }
-#users .card button { padding:8px 12px; margin:5px 5px 0 0; background:#0073e6; color:white; border:none; border-radius:5px; cursor:pointer; }
-#users .card button:hover { background:#005bb5; }
-textarea { resize: vertical; min-height:50px; max-height:100px; }
+input {
+  width: 80%;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #004080;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+
+button:hover {
+  background-color: #0055a5;
+}
+
+.hidden {
+  display: none;
+}
+
+.error {
+  color: red;
+}
+
+table {
+  width: 90%;
+  margin: 20px auto;
+  border-collapse: collapse;
+  background: white;
+}
+
+th, td {
+  padding: 10px;
+  border: 1px solid #ccc;
+  text-align: center;
+}
+
+th {
+  background-color: #004080;
+  color: white;
+}
