@@ -49,7 +49,7 @@
     <input type="text" id="rName" placeholder="Full Name">
     <input type="email" id="rEmail" placeholder="Email">
     <input type="password" id="rPassword" placeholder="Password">
-    <input type="date" id="rDOB" placeholder="Date of Birth">
+    <input type="date" id="rDOB">
     <input type="text" id="rAddress" placeholder="Address">
     <button onclick="sendOTP()">Send OTP</button>
 
@@ -72,7 +72,7 @@
     <div id="transferSection" class="hidden">
       <h3>Transfer Funds</h3>
       <input type="email" id="transferEmail" placeholder="Recipient Email">
-      <input type="number" id="transferAmount" placeholder="Amount">
+      <input type="number" id="transferAmount" placeholder="Amount" step="0.01">
       <button onclick="transferFunds()">Send</button>
       <p id="transferMsg" class="success"></p>
     </div>
@@ -94,7 +94,7 @@
 
 </main>
 
-<!-- Separate JS -->
+<!-- JS -->
 <script src="index.js"></script>
 </body>
-</html>
+      </html>
