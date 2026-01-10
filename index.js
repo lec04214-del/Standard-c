@@ -1,136 +1,160 @@
-// ====== EMAILJS INIT ======
-(function(){
-  emailjs.init("YOUR_PUBLIC_KEY"); // Replace with your EmailJS public key
-})();
+// Initialize EmailJS
+emailjs.init("YOUR_USER_ID"); // Replace with your EmailJS user ID
 
-// ========== USERS DATA ==========
-let users = JSON.parse(localStorage.getItem("users")) || [];
+// Simple "database"
+let users = [];
+let transactions = [];
 let currentUser = null;
-let generatedOTP = "";
+let generatedOTP = null;
 
-// ======= REGISTRATION & LOGIN ========
-function showRegister() { document.getElementById("loginForm").classList.add("hidden"); document.getElementById("registerForm").classList.remove("hidden"); }
-function showLogin() { document.getElementById("registerForm").classList.add("hidden"); document.getElementById("loginForm").classList.remove("hidden"); }
-
-// Send OTP
-function sendOTP() {
-  const email = document.getElementById("rEmail").value;
-  const name = document.getElementById("rName").value;
-  if (!email || !name) { document.getElementById("regError").textContent = "Name and email required"; return; }
-
-  generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
-
-  emailjs.send(
-    "service_standardc",
-    "template_gw847ac",
-    { to_email: email, subject: "Your OTP Code", message: "Hello " + name + ", your OTP is: " + generatedOTP }
-  ).then(()=> {
-    alert("OTP sent to " + email);
-    document.getElementById("otpBox").classList.remove("hidden");
-  }).catch(err=> { console.error(err); alert("Failed to send OTP"); });
-}
-
-// Verify OTP
-function verifyOTP() {
-  const input = document.getElementById("userOTP").value;
-  if (input === generatedOTP) {
-    const newUser = {
-      name: document.getElementById("rName").value,
-      email: document.getElementById("rEmail").value,
-      password: document.getElementById("rPassword").value,
-      dob: document.getElementById("rDOB").value,
-      address: document.getElementById("rAddress").value,
-      balance: 0,
-      transactions: [],
-      messages: [],
-      frozen: false
-    };
-    users.push(newUser);
-    localStorage.setItem("users", JSON.stringify(users));
-    alert("Account created! You can now login.");
-    showLogin();
-  } else {
-    alert("Incorrect OTP.");
-  }
-}
-
-// Login
-function login() {
-  const email = document.getElementById("loginEmail").value;
-  const password = document.getElementById("loginPassword").value;
-  const user = users.find(u => u.email === email && u.password === password);
-  if (user) {
-    currentUser = user;
-    showDashboard();
-  } else {
-    document.getElementById("loginError").textContent = "Invalid login";
-  }
-}
-
-// ========== DASHBOARD ==========
-function showDashboard() {
-  document.getElementById("loginForm").classList.add("hidden");
+// --- Show / Hide Sections ---
+function showLogin() {
+  document.getElementById("loginForm").classList.remove("hidden");
   document.getElementById("registerForm").classList.add("hidden");
-  document.getElementById("dashboard").classList.remove("hidden");
-  document.getElementById("userName").textContent = currentUser.name;
-  document.getElementById("userBalance").textContent = currentUser.balance.toFixed(2);
-  loadTransactions();
-  hideSections();
+  document.getElementById("dashboard").classList.add("hidden");
 }
-function hideSections() {
+
+function showRegister() {
+  document.getElementById("registerForm").classList.remove("hidden");
+  document.getElementById("loginForm").classList.add("hidden");
+}
+
+function showDashboard() {
+  document.getElementById("dashboard").classList.remove("hidden");
+  hideAllSections();
+}
+
+function showTransfer() {
+  hideAllSections();
+  document.getElementById("transferSection").classList.remove("hidden");
+}
+
+function showTransactions() {
+  hideAllSections();
+  document.getElementById("transactionsSection").classList.remove("hidden");
+}
+
+function showSupport() {
+  hideAllSections();
+  document.getElementById("supportSection").classList.remove("hidden");
+}
+
+function hideAllSections() {
   document.getElementById("transferSection").classList.add("hidden");
   document.getElementById("transactionsSection").classList.add("hidden");
   document.getElementById("supportSection").classList.add("hidden");
 }
 
-// Transfer
-function showTransfer() { hideSections(); document.getElementById("transferSection").classList.remove("hidden"); }
+// --- Login ---
+function login() {
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
+  const user = users.find(u => u.email === email && u.password === password);
+
+  if (user) {
+    currentUser = user;
+    document.getElementById("userName").innerText = user.name;
+    document.getElementById("userBalance").innerText = user.balance.toFixed(2);
+    showDashboard();
+    document.getElementById("loginError").innerText = "";
+  } else {
+    document.getElementById("loginError").innerText = "Invalid email or password";
+  }
+}
+
+// --- Registration & OTP ---
+function sendOTP() {
+  const name = document.getElementById("rName").value;
+  const email = document.getElementById("rEmail").value;
+  const password = document.getElementById("rPassword").value;
+
+  if (!name || !email || !password) {
+    document.getElementById("regError").innerText = "Please fill all fields";
+    return;
+  }
+
+  generatedOTP = Math.floor(100000 + Math.random() * 900000);
+  alert("Your OTP: " + generatedOTP); // For demo, you can send via email in production
+  document.getElementById("otpBox").classList.remove("hidden");
+}
+
+function verifyOTP() {
+  const userOTP = document.getElementById("userOTP").value;
+  if (parseInt(userOTP) === generatedOTP) {
+    const user = {
+      name: document.getElementById("rName").value,
+      email: document.getElementById("rEmail").value,
+      password: document.getElementById("rPassword").value,
+      balance: 0
+    };
+    users.push(user);
+    generatedOTP = null;
+    alert("Registration successful!");
+    showLogin();
+  } else {
+    document.getElementById("regError").innerText = "Invalid OTP";
+  }
+}
+
+// --- Transfer ---
 function transferFunds() {
-  const recipientEmail = document.getElementById("transferEmail").value;
-  const amount = +document.getElementById("transferAmount").value;
-  const recipient = users.find(u => u.email === recipientEmail);
-  if (!recipient) { document.getElementById("transferMsg").textContent = "Recipient not found"; return; }
-  if (currentUser.balance < amount) { document.getElementById("transferMsg").textContent = "Insufficient balance"; return; }
+  const email = document.getElementById("transferEmail").value;
+  const amount = parseFloat(document.getElementById("transferAmount").value);
+  const recipient = users.find(u => u.email === email);
+
+  if (!recipient) {
+    document.getElementById("transferMsg").innerText = "Recipient not found";
+    return;
+  }
+  if (amount <= 0 || amount > currentUser.balance) {
+    document.getElementById("transferMsg").innerText = "Invalid amount";
+    return;
+  }
 
   currentUser.balance -= amount;
   recipient.balance += amount;
+  transactions.push({
+    from: currentUser.email,
+    to: recipient.email,
+    amount: amount.toFixed(2),
+    date: new Date().toLocaleString()
+  });
 
-  const tx1 = { type:"Debit", amount, to:recipientEmail, date:new Date().toLocaleString() };
-  const tx2 = { type:"Credit", amount, from:currentUser.email, date:new Date().toLocaleString() };
-  currentUser.transactions.push(tx1);
-  recipient.transactions.push(tx2);
-
-  localStorage.setItem("users", JSON.stringify(users));
-  document.getElementById("userBalance").textContent = currentUser.balance.toFixed(2);
-  document.getElementById("transferMsg").textContent = "Transfer successful";
-
-  emailjs.send("service_standardc","template_gw847ac",{ to_email: recipient.email, subject:"Funds Received", message: `You received $${amount} from ${currentUser.email}` });
+  document.getElementById("userBalance").innerText = currentUser.balance.toFixed(2);
+  document.getElementById("transferMsg").innerText = "Transfer successful!";
 }
 
-// Transactions
-function showTransactions() { hideSections(); document.getElementById("transactionsSection").classList.remove("hidden"); }
-function loadTransactions() {
+// --- Transactions ---
+function updateTransactions() {
   const list = document.getElementById("transactionList");
   list.innerHTML = "";
-  currentUser.transactions.forEach(tx => {
-    list.innerHTML += `<li>${tx.date} - ${tx.type} ${tx.amount} ${tx.to ? "to "+tx.to : tx.from ? "from "+tx.from : ""}</li>`;
+  transactions.forEach(tx => {
+    if (tx.from === currentUser.email || tx.to === currentUser.email) {
+      const li = document.createElement("li");
+      li.innerText = `${tx.date}: ${tx.from} → ${tx.to} : $${tx.amount}`;
+      list.appendChild(li);
+    }
   });
 }
 
-// Customer Support
-function showSupport() { hideSections(); document.getElementById("supportSection").classList.remove("hidden"); }
+// --- Customer Support ---
 function sendSupport() {
   const msg = document.getElementById("supportMsg").value;
-  currentUser.messages.push({ text: msg, date: new Date().toLocaleString(), reply:"" });
-  localStorage.setItem("users", JSON.stringify(users));
-  document.getElementById("supportFeedback").textContent = "Message sent to admin";
+  if (!msg) return;
+
+  emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", {
+    user_email: currentUser.email,
+    message: msg
+  }).then(res => {
+    document.getElementById("supportFeedback").innerText = "Message sent!";
+    document.getElementById("supportMsg").value = "";
+  }).catch(err => {
+    document.getElementById("supportFeedback").innerText = "Failed to send!";
+  });
 }
 
-// Logout
-function logout() { currentUser=null; document.getElementById("dashboard").classList.add("hidden"); showLogin(); }
-
-// Sidebar toggle
-const menuBtn = document.getElementById("menuBtn");
-const sidebar = document.getElementById("sidebar");
-menuBtn.addEventListener("click",()=>{ sidebar.classList.toggle("hidden"); });
-window.addEventListener("click",(e)=>{ if(!sidebar.contains(e.target) && e.target!==menuBtn){ sidebar.classList.add("hidden"); }});
+// --- Logout ---
+function logout() {
+  currentUser = null;
+  showLogin();
+    }
