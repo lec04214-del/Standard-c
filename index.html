@@ -2,270 +2,99 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Standard-C Online Banking</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Standard-C Online Banking</title>
 <link rel="stylesheet" href="index.css">
+
+<!-- EmailJS -->
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
-<script>
-(function(){ emailjs.init("YOUR_PUBLIC_KEY"); })();
-</script>
 </head>
 <body>
 
-<!-- HOME -->
-<div class="screen" id="home">
-  <h1>Welcome to Standard-C Bank</h1>
-  <div class="btn-group">
-    <button onclick="showLogin()">Login</button>
-    <button onclick="showRegister()">Create Account</button>
-  </div>
-</div>
-
-<!-- REGISTER -->
-<div class="screen hidden" id="register">
-  <h1>Create Account</h1>
-  <div class="form-group">
-    <input id="rName" placeholder="Full Name">
-    <input id="rDob" type="date">
-    <select id="rGender">
-      <option value="">Gender</option>
-      <option>Male</option>
-      <option>Female</option>
-      <option>Other</option>
-    </select>
-    <input id="rNationality" placeholder="Nationality">
-    <input id="rAddress" placeholder="Residential Address">
-    <input id="rId" placeholder="National ID / Passport">
-    <input id="rEmail" placeholder="Email Address">
-    <select id="rAccountType">
-      <option value="">Account Type</option>
-      <option>Savings</option>
-      <option>Current</option>
-    </select>
-    <input id="rPin" type="password" placeholder="4-digit PIN">
-    <label>ID Document</label>
-    <input id="rDoc" type="file" accept="image/*,.pdf">
-    <label>Selfie</label>
-    <input id="rSelfie" type="file" accept="image/*">
-    <button onclick="sendOTP()">Send Email OTP</button>
-    <div id="otpBox" class="hidden">
-      <input id="otpInput" placeholder="Enter OTP">
-      <button onclick="verifyOTP()">Verify & Create Account</button>
-    </div>
-    <p id="regError" class="error"></p>
-    <button onclick="goHome()" class="secondary-btn">Back</button>
-  </div>
-</div>
-
-<!-- LOGIN -->
-<div class="screen hidden" id="login">
-  <h1>Login</h1>
-  <div class="form-group">
-    <input id="email" placeholder="Email">
-    <input id="pin" type="password" placeholder="PIN">
-    <button onclick="loginUser()">Login</button>
-    <button onclick="goHome()" class="secondary-btn">Back</button>
-    <p id="error" class="error"></p>
-  </div>
-</div>
+<!-- HEADER -->
+<header>
+  <div id="menuBtn">&#9776;</div>
+  <h1>Standard-C Bank</h1>
+  <div class="currency-exchange">Currency: USD</div>
+  <div class="logo">LOGO</div>
+</header>
 
 <!-- SIDEBAR -->
-<div class="sidebar" id="sidebar">
-  <div class="sidebar-header">
-    <h2>Standard-C</h2>
-    <span onclick="closeSidebar()" class="close-btn">&times;</span>
-  </div>
+<nav id="sidebar" class="hidden">
   <ul>
-    <li onclick="closeSidebar()">Dashboard</li>
+    <li onclick="showDashboard()">Dashboard</li>
+    <li onclick="showTransfer()">Transfer</li>
+    <li onclick="showTransactions()">Transactions</li>
+    <li onclick="showSupport()">Customer Support</li>
     <li onclick="logout()">Logout</li>
   </ul>
-</div>
+</nav>
 
-<!-- DASHBOARD -->
-<div id="dashboard" class="hidden">
-  <div class="header">
-    <span class="menu" onclick="openSidebar()">☰</span>
-    <h2>Dashboard</h2>
-    <div class="currency">
-      <span>USD 1.00</span> | <span>EUR 0.92</span>
-    </div>
+<!-- MAIN CONTENT -->
+<main>
+
+  <!-- LOGIN FORM -->
+  <div id="loginForm" class="form-container">
+    <h2>Login</h2>
+    <input type="email" id="loginEmail" placeholder="Email">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <p>New? <span onclick="showRegister()">Create Account</span></p>
+    <p id="loginError" class="error"></p>
   </div>
 
-  <div class="cards-container">
-    <div class="card">
-      <h3>Account Number</h3>
-      <p id="accNumber"></p>
-      <span id="freezeStatus"></span>
+  <!-- REGISTRATION FORM -->
+  <div id="registerForm" class="form-container hidden">
+    <h2>Create Account</h2>
+    <input type="text" id="rName" placeholder="Full Name">
+    <input type="email" id="rEmail" placeholder="Email">
+    <input type="password" id="rPassword" placeholder="Password">
+    <input type="date" id="rDOB" placeholder="Date of Birth">
+    <input type="text" id="rAddress" placeholder="Address">
+    <button onclick="sendOTP()">Send OTP</button>
+
+    <!-- OTP input -->
+    <div id="otpBox" class="hidden">
+      <input type="text" id="userOTP" placeholder="Enter OTP">
+      <button onclick="verifyOTP()">Verify OTP</button>
     </div>
 
-    <div class="card">
-      <h3>Balance</h3>
-      <p id="balance">$0.00</p>
-    </div>
+    <p id="regError" class="error"></p>
+    <p><span onclick="showLogin()">Already have account? Login</span></p>
+  </div>
 
-    <div class="card">
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="hidden">
+    <h2>Welcome, <span id="userName"></span></h2>
+    <p>Balance: $<span id="userBalance">0.00</span></p>
+
+    <!-- Transfer -->
+    <div id="transferSection" class="hidden">
       <h3>Transfer Funds</h3>
-      <input id="toAcc" placeholder="Recipient Account Number">
-      <input id="amount" type="number" placeholder="Amount">
-      <button onclick="transfer()">Send</button>
+      <input type="email" id="transferEmail" placeholder="Recipient Email">
+      <input type="number" id="transferAmount" placeholder="Amount">
+      <button onclick="transferFunds()">Send</button>
       <p id="transferMsg" class="success"></p>
     </div>
 
-    <div class="card">
+    <!-- Transactions -->
+    <div id="transactionsSection" class="hidden">
       <h3>Transaction History</h3>
-      <ul id="transactions"></ul>
+      <ul id="transactionList"></ul>
     </div>
 
-    <div class="card">
+    <!-- Customer Support -->
+    <div id="supportSection" class="hidden">
       <h3>Customer Support</h3>
-      <textarea id="message" placeholder="Write message"></textarea>
-      <button onclick="sendMessage()">Send</button>
-      <p id="adminReply"></p>
+      <textarea id="supportMsg" placeholder="Write your message"></textarea>
+      <button onclick="sendSupport()">Send</button>
+      <p id="supportFeedback" class="success"></p>
     </div>
   </div>
-</div>
 
-<script>
-//------------------- DATA -----------------------
-let users = JSON.parse(localStorage.getItem("users")) || [];
-let currentUser = null;
-let generatedOTP = "";
-let sidebarOpen = false;
+</main>
 
-//------------------- NAV ------------------------
-function showLogin(){ home.classList.add("hidden"); login.classList.remove("hidden"); }
-function showRegister(){ home.classList.add("hidden"); register.classList.remove("hidden"); }
-function goHome(){ login.classList.add("hidden"); register.classList.add("hidden"); home.classList.remove("hidden"); }
-
-//------------------- EMAIL ----------------------
-function sendEmail(to,subject,message){
-  emailjs.send("YOUR_SERVICE_ID","YOUR_TEMPLATE_ID",{
-    to_email:to,
-    subject:subject,
-    message:message
-  });
-}
-
-//------------------- ACCOUNT --------------------
-function generateAccountNumber(){
-  const y=new Date().getFullYear();
-  return `SCB-${y}-${Math.floor(10000000+Math.random()*90000000)}`;
-}
-
-//------------------- OTP ------------------------
-function sendOTP(){
-  if(!rName.value||!rEmail.value||!rPin.value||!rDoc.files[0]||!rSelfie.files[0]){
-    regError.textContent="All fields required"; return;
-  }
-  generatedOTP = Math.floor(100000 + Math.random()*900000).toString();
-  sendEmail(rEmail.value,"OTP Verification","Your OTP: "+generatedOTP);
-  otpBox.classList.remove("hidden");
-}
-
-function file64(f, cb){ const r=new FileReader(); r.onload=()=>cb(r.result); r.readAsDataURL(f); }
-
-function verifyOTP(){
-  if(otpInput.value!==generatedOTP){ regError.textContent="Invalid OTP"; return; }
-  file64(rDoc.files[0], d=>{
-    file64(rSelfie.files[0], s=>{
-      users.push({
-        accountNumber: generateAccountNumber(),
-        name: rName.value,
-        email: rEmail.value,
-        pin: rPin.value,
-        balance: 0,
-        frozen: false,
-        transactions: [],
-        messages: [],
-        kyc: {document: d, selfie: s, status: "Pending"}
-      });
-      localStorage.setItem("users", JSON.stringify(users));
-      alert("Account created. KYC pending.");
-      goHome();
-    });
-  });
-}
-
-//------------------- LOGIN ----------------------
-function loginUser(){
-  currentUser = users.find(u => u.email===email.value && u.pin===pin.value);
-  if(!currentUser){ error.textContent="Invalid login"; return; }
-  login.classList.add("hidden");
-  dashboard.classList.remove("hidden");
-  sendEmail(currentUser.email,"Login Alert","Your account was accessed.");
-  render();
-}
-
-//------------------- DASHBOARD ------------------
-function render(){
-  const accNumberEl = document.getElementById("accNumber");
-  const balanceEl = document.getElementById("balance");
-  const freezeStatusEl = document.getElementById("freezeStatus");
-  const transactionsEl = document.getElementById("transactions");
-  const adminReplyEl = document.getElementById("adminReply");
-  
-  accNumberEl.textContent = currentUser.accountNumber;
-  balanceEl.textContent = "$"+currentUser.balance.toFixed(2);
-  freezeStatusEl.textContent = currentUser.frozen ? "ACCOUNT FROZEN" : "ACTIVE";
-  freezeStatusEl.style.color = currentUser.frozen ? "red" : "green";
-
-  transactionsEl.innerHTML = "";
-  currentUser.transactions.slice().reverse().forEach(t=>{
-    const li = document.createElement("li");
-    li.innerHTML = `<strong>${t.type}</strong> | $${t.amount} <small>${t.date}</small>`;
-    transactionsEl.appendChild(li);
-  });
-
-  const lastMsg = currentUser.messages.slice(-1)[0];
-  adminReplyEl.textContent = lastMsg ? lastMsg.reply : "";
-}
-
-//------------------- TRANSFER -------------------
-function transfer(){
-  const toAcc = document.getElementById("toAcc").value;
-  const amount = Number(document.getElementById("amount").value);
-  const transferMsg = document.getElementById("transferMsg");
-
-  if(currentUser.frozen){ transferMsg.textContent="Account frozen"; return; }
-
-  const receiver = users.find(u => u.accountNumber===toAcc);
-  if(!receiver || amount<=0 || currentUser.balance<amount){ transferMsg.textContent="Transfer failed"; return; }
-
-  const now = new Date().toLocaleString();
-  currentUser.balance -= amount;
-  receiver.balance += amount;
-
-  currentUser.transactions.push({type:"Transfer Out", amount: amount, date: now});
-  receiver.transactions.push({type:"Transfer In", amount: amount, date: now});
-
-  localStorage.setItem("users", JSON.stringify(users));
-
-  sendEmail(currentUser.email,"Transfer Sent",`You sent $${amount} to ${receiver.accountNumber}`);
-  sendEmail(receiver.email,"Transfer Received",`You received $${amount} from ${currentUser.accountNumber}`);
-
-  transferMsg.textContent="Transfer successful";
-  render();
-}
-
-//------------------- CUSTOMER SUPPORT ------------
-function sendMessage(){
-  const msgEl = document.getElementById("message");
-  currentUser.messages.push({text: msgEl.value, reply: ""});
-  localStorage.setItem("users", JSON.stringify(users));
-  msgEl.value="";
-  alert("Message sent");
-  render();
-}
-
-//------------------- SIDEBAR --------------------
-const sidebar = document.getElementById("sidebar");
-function openSidebar(){ sidebar.classList.add("open"); sidebarOpen=true; history.pushState({}, ""); }
-function closeSidebar(){ sidebar.classList.remove("open"); sidebarOpen=false; }
-window.onpopstate = ()=>{ if(sidebarOpen) closeSidebar(); }
-
-//------------------- LOGOUT ---------------------
-function logout(){ location.reload(); }
-</script>
-
+<!-- Separate JS -->
+<script src="index.js"></script>
 </body>
 </html>
