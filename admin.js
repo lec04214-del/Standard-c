@@ -1,35 +1,64 @@
-let users = JSON.parse(localStorage.getItem("users")) || [];
-const ADMIN_PIN = "9999";
+// Admin PIN
+const ADMIN_PIN = "1234";
 
+// Demo "database" of users
+let users = [
+  { name: "John Doe", email: "john@example.com", balance: 500 },
+  { name: "Jane Smith", email: "jane@example.com", balance: 1200 },
+  { name: "Alice Johnson", email: "alice@example.com", balance: 300 }
+];
+
+// Demo transaction history
+let transactions = [
+  { date: "2026-01-10 10:00", from: "John Doe", to: "Jane Smith", amount: 100 },
+  { date: "2026-01-09 15:30", from: "Alice Johnson", to: "John Doe", amount: 50 }
+];
+
+let adminLoggedIn = false;
+
+// --- Admin Login ---
 function adminLogin() {
   const pin = document.getElementById("adminPin").value;
-  if(pin !== ADMIN_PIN){ document.getElementById("error").textContent = "Invalid admin PIN"; return; }
-  document.getElementById("adminLogin").classList.add("hidden");
-  document.getElementById("adminPanel").classList.remove("hidden");
-  loadUsers();
+  const error = document.getElementById("error");
+
+  if (pin === ADMIN_PIN) {
+    adminLoggedIn = true;
+    document.getElementById("adminLogin").classList.add("hidden");
+    document.getElementById("adminPanel").classList.remove("hidden");
+    showUsers();
+    showTransactions();
+  } else {
+    error.innerText = "Incorrect PIN";
+  }
 }
 
-function loadUsers() {
-  const usersDiv = document.getElementById("users");
-  usersDiv.innerHTML = "";
-  users.forEach((u,i)=>{
-    usersDiv.innerHTML += `
-      <div class="card">
-        <p><strong>${u.name}</strong> (${u.email}) ${u.frozen ? "[Frozen]" : ""}</p>
-        <p>Balance: $${u.balance.toFixed(2)}</p>
-        <input id="amount${i}" placeholder="Amount">
-        <button onclick="credit(${i})">Credit</button>
-        <button onclick="debit(${i})">Debit</button>
-        <button onclick="toggleFreeze(${i})">${u.frozen ? "Unfreeze" : "Freeze"}</button>
-        <textarea id="reply${i}" placeholder="Reply to customer"></textarea>
-        <button onclick="sendReply(${i})">Send Reply</button>
-      </div>
-    `;
+// --- Show Users ---
+function showUsers() {
+  const tbody = document.querySelector("#usersTable tbody");
+  tbody.innerHTML = "";
+  users.forEach(u => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${u.name}</td><td>${u.email}</td><td>$${u.balance.toFixed(2)}</td>`;
+    tbody.appendChild(tr);
   });
 }
 
-function credit(i){ const amt= +document.getElementById("amount"+i).value; users[i].balance+=amt; users[i].transactions.push({type:"Credit",amount:amt,date:new Date().toLocaleString()}); saveUsers(); }
-function debit(i){ const amt= +document.getElementById("amount"+i).value; users[i].balance-=amt; users[i].transactions.push({type:"Debit",amount:amt,date:new Date().toLocaleString()}); saveUsers(); }
-function toggleFreeze(i){ users[i].frozen = !users[i].frozen; saveUsers(); }
-function sendReply(i){ const reply=document.getElementById("reply"+i).value; const lastMsg=users[i].messages.slice(-1)[0]; if(lastMsg) lastMsg.reply=reply; saveUsers(); }
-function saveUsers(){ localStorage.setItem("users",JSON.stringify(users)); loadUsers(); }
+// --- Show Transactions ---
+function showTransactions() {
+  const tbody = document.querySelector("#transactionsTable tbody");
+  tbody.innerHTML = "";
+  transactions.forEach(tx => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${tx.date}</td><td>${tx.from}</td><td>${tx.to}</td><td>$${tx.amount.toFixed(2)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// --- Logout ---
+function logout() {
+  adminLoggedIn = false;
+  document.getElementById("adminPanel").classList.add("hidden");
+  document.getElementById("adminLogin").classList.remove("hidden");
+  document.getElementById("adminPin").value = "";
+  document.getElementById("error").innerText = "";
+}
